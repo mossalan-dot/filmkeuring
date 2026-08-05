@@ -1,0 +1,8 @@
+# lokaal / gevoelig — nooit committen
+.env
+*.key
+TMDB_KEY*
+cc_scrape.log
+server.py
+__pycache__/
+.DS_Store
