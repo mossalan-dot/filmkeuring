@@ -68,16 +68,21 @@
   .bar .seg{height:100%}
   .bar .val{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}
   .bar:hover .fill,.bar:hover .track{filter:brightness(1.05)}
-  /* gestapelde jaar-kolommen */
-  .yearchart{display:flex;align-items:flex-end;gap:6px;height:250px;padding-top:8px;position:relative}
-  .ycol{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;min-width:0}
-  .ystack{width:100%;max-width:34px;display:flex;flex-direction:column-reverse;border-radius:4px 4px 0 0;overflow:hidden;cursor:pointer}
+  /* gestapelde jaar-kolommen met y-as */
+  .yearchart{display:grid;grid-template-columns:32px 1fr;grid-template-rows:200px auto;column-gap:6px}
+  .yaxis{grid-area:1/1;position:relative;font-size:9px;color:var(--muted)}
+  .yaxis span{position:absolute;right:3px;transform:translateY(50%);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .yplot{grid-area:1/2;position:relative}
+  .gridline{position:absolute;left:0;right:0;border-top:1px solid #eef1f4}
+  .ycols{position:absolute;inset:0;display:flex;align-items:flex-end;gap:6px}
+  .ycol{flex:1;min-width:0;height:100%;display:flex;align-items:flex-end;justify-content:center}
+  .ystack{width:100%;max-width:30px;display:flex;flex-direction:column-reverse;border-radius:4px 4px 0 0;overflow:hidden;cursor:pointer}
+  .ystack:hover{filter:brightness(1.07)}
   .yseg{width:100%}
-  .ystack:hover{filter:brightness(1.06)}
-  .ycap{font-size:10px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap}
-  .ycap b{display:block;color:var(--ink);font-size:11px}
-  .occband{position:absolute;top:8px;bottom:22px;background:#1f293708;border-left:1px dashed #cbd5e1;border-right:1px dashed #cbd5e1;pointer-events:none}
-  .occband span{position:absolute;top:2px;left:50%;transform:translateX(-50%);font-size:9.5px;color:var(--muted);white-space:nowrap}
+  .yxrow{grid-area:2/2;display:flex;gap:6px;margin-top:6px}
+  .yxcell{flex:1;min-width:0;text-align:center;font-size:9.5px;color:var(--muted);white-space:nowrap}
+  .occband{position:absolute;top:0;bottom:0;background:#1f293708;border-left:1px dashed #cbd5e1;border-right:1px dashed #cbd5e1;pointer-events:none;z-index:1}
+  .occband span{position:absolute;top:3px;left:50%;transform:translateX(-50%);font-size:9.5px;color:var(--muted);white-space:nowrap}
   .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;font-size:12.5px}
   .legend span{display:inline-flex;align-items:center;gap:6px;color:var(--muted);cursor:pointer;user-select:none}
   .legend span.off{opacity:.32}
@@ -328,6 +333,8 @@ function bars(id,rows,denom,opt){
   }).join(''); bindTips();
 }
 /* gestapelde jaar-kolommen (klikbare legenda) */
+function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v)));const n=v/p;const st=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;return st*p;}
+function axisLabel(v,unit){if(unit==='%')return Math.round(v)+'%';if(v>=1000){const k=v/1000;return (k%1?k.toFixed(1):k)+'k';}return Math.round(v);}
 function yearchart(elId,legId,data,keys,opt){
   opt=opt||{}; let iso=null, gran='jaar', excl=false;
   const decadeData=()=>{const m=new Map();
@@ -338,22 +345,25 @@ function yearchart(elId,legId,data,keys,opt){
     const D=gran==='dec'?decadeData():data;
     const active=keys.filter(k=>(!iso||k.k===iso)&&!(excl&&opt.exclude&&k.k===opt.exclude.k));
     const totals=D.map(d=>active.reduce((sm,k)=>sm+(d[k.k]||0),0));
-    const maxY=Math.max(1,...totals);
-    const el=document.getElementById(elId); let occ='';
+    const maxY=Math.max(1,...totals), top=niceMax(maxY), T=4;
+    let axis='',grid='';
+    for(let i=0;i<=T;i++){const pos=i/T*100;
+      axis+=`<span style="bottom:${pos}%">${axisLabel(top*i/T,opt.unit)}</span>`;
+      grid+=`<div class="gridline" style="bottom:${pos}%"></div>`;}
+    let occ='';
     if(opt.occ&&gran==='jaar'){const i0=D.findIndex(d=>d.y===opt.occ[0]),i1=D.findIndex(d=>d.y===opt.occ[1]);
       if(i0>=0&&i1>=0){const l=i0/D.length*100,r=(i1+1)/D.length*100;
         occ=`<div class="occband" style="left:${l}%;right:${100-r}%"><span>${opt.occLabel||''}</span></div>`;}}
-    el.innerHTML=occ+D.map((d,idx)=>{
+    const cols=D.map((d,idx)=>{
       const tot=totals[idx], per=d.dec?`${d.y}–${d.y+9}`:d.y;
       const segs=active.filter(k=>d[k.k]).map(k=>
-        `<div class="yseg" data-tip="<b>${per} · ${esc(k.lab)}</b><br>${nl(d[k.k])} ${opt.unit||'films'}" style="height:${d[k.k]/maxY*100}%;background:${k.col}"></div>`).join('');
-      const lbl=d.dec?`${String(d.y).slice(2)}s`:(d.y%10===0?d.y:String(d.y).slice(2));
-      const showLbl=d.dec||!opt.everyLabel||d.y%opt.everyLabel===0;
-      const cap=(opt.everyLabel||d.dec)?`<div class="ycap">${showLbl?`<b>${lbl}</b>`:'&nbsp;'}</div>`
-                                       :`<div class="ycap"><b>${nl(tot)}</b>${d.y}</div>`;
-      return `<div class="ycol"><div class="ystack" data-y="${d.y}" style="height:${tot/maxY*100}%">${segs}</div>${cap}</div>`;
+        `<div class="yseg" data-tip="<b>${per} · ${esc(k.lab)}</b><br>${nl(d[k.k])} ${opt.unit||'films'}" style="height:${tot?d[k.k]/tot*100:0}%;background:${k.col}"></div>`).join('');
+      return `<div class="ycol"><div class="ystack" data-y="${d.y}" style="height:${tot/top*100}%">${segs}</div></div>`;
     }).join('');
-    if(opt.onClick&&gran==='jaar') el.querySelectorAll('.ystack').forEach(x=>x.onclick=()=>opt.onClick(+x.dataset.y));
+    const labels=D.map(d=>{const show=d.dec?true:d.y%5===0; return `<div class="yxcell">${show?(d.dec?d.y+'s':d.y):''}</div>`;}).join('');
+    document.getElementById(elId).innerHTML=
+      `<div class="yaxis">${axis}</div><div class="yplot">${grid}${occ}<div class="ycols">${cols}</div></div><div class="yxrow">${labels}</div>`;
+    if(opt.onClick&&gran==='jaar') document.getElementById(elId).querySelectorAll('.ystack').forEach(x=>x.onclick=()=>opt.onClick(+x.dataset.y));
     bindTips();
   }
   const legEl=legId&&document.getElementById(legId);
