@@ -36,6 +36,25 @@ def clean(s):
     s = s.strip().strip('"').strip()   # omringende quotes weg, subtitel-quotes blijven
     return s
 
+# lidwoord dat archivarisch achteraan is gezet ("Bruiden van Dracula, De" -> "De Bruiden van Dracula")
+ARTICLES = {"de","het","een","'t","'n","the","a","an","le","la","les","l'","un","une","des",
+            "der","die","das","ein","eine","il","lo","el","los","las","una","gli","os","as"}
+# BEWUST NIET: "i" — dubbelzinnig (Italiaans lidwoord vs deel/roman "I", bv "Olympische Spiele 1936, I")
+ART_RE = re.compile(r"^(.*?),\s*([A-Za-z'’]{1,4})$")
+def _invert(seg):
+    seg = seg.strip()
+    m = ART_RE.match(seg)
+    if m and m.group(2).lower() in ARTICLES:
+        art, rest = m.group(2), m.group(1).strip()
+        return art + rest if art.lower() in ("l'", "l’") else art + " " + rest
+    return seg
+def normalize_title(raw):
+    """('Bruiden van Dracula, De; Brides of Dracula') -> ('De Bruiden van Dracula', ['Brides of Dracula'])"""
+    parts = [_invert(p) for p in clean(raw).split(";") if p.strip()]
+    if not parts:
+        return clean(raw), []
+    return parts[0], parts[1:]
+
 def meters(s):
     m = METER_RE.search(s or "")
     if not m:
@@ -72,7 +91,7 @@ banned = coupures = herk = 0
 
 with open(SRC, encoding="utf-8") as f:
     for row in csv.DictReader(f):
-        title = clean(row["ond_tekst_filmtitel"])
+        title, alt_titles = normalize_title(row["ond_tekst_filmtitel"])
         d = row["ond_datum_keuring"].strip()
         year = d[:4] if len(d) >= 4 and d[:4].isdigit() else None
         o = OORDEEL.get(row["ond_tekst_oordeel"].strip(), "?")
@@ -86,6 +105,8 @@ with open(SRC, encoding="utf-8") as f:
         ho_code = OORDEEL.get(ho, None) if ho else None
 
         rec = {"t": title}
+        if alt_titles:
+            rec["alt"] = alt_titles
         aanvr_c = clean(row["org_naam_aanvrager"])
         fabr_c = clean(row["org_naam_fabriek"])
         if aanvr_c:

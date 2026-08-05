@@ -35,7 +35,7 @@
   .tabbar button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
   .tabbar button:not(.on):hover{border-color:var(--accent);color:var(--accent)}
   main{max-width:1180px;margin:0 auto;padding:16px 24px 60px}
-  .intro{font-size:15.5px;color:#374151;margin:0 auto 22px;max-width:74ch;text-align:center}
+  .intro{font-size:15.5px;color:#374151;margin:0 0 22px;max-width:none;text-align:left}
   .intro b{color:var(--ink)}
   .tabpane{display:none}
   .tabpane.on{display:block}
@@ -82,6 +82,10 @@
   .legend span{display:inline-flex;align-items:center;gap:6px;color:var(--muted);cursor:pointer;user-select:none}
   .legend span.off{opacity:.32}
   .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .toggle{display:inline-flex;gap:2px;background:#eef1f4;border-radius:8px;padding:2px}
+  .toggle button{border:none;background:none;font:inherit;font-size:11.5px;padding:3px 9px;border-radius:6px;cursor:pointer;color:var(--muted)}
+  .toggle button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+  .legtools{margin-left:auto;display:inline-flex;gap:8px;flex-wrap:wrap}
   .note{font-size:12px;color:var(--muted);margin-top:12px}
   .takeaway{margin-top:13px;padding:10px 12px;background:var(--cream);border:1px solid var(--cream-line);border-radius:9px;font-size:12.5px;color:#4b5563}
   .takeaway b{color:var(--ink)}
@@ -125,6 +129,7 @@
   .fcard h3{margin:0;font-size:15.5px;line-height:1.25;word-break:break-word}
   .fcard .m{color:var(--muted);font-size:12px}
   .fcard .m.credit{color:#4b5563}
+  .fcard .m.alt{font-style:italic}
   .fbadges{display:flex;flex-wrap:wrap;gap:5px}
   .fb{font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px}
   .fb.A{background:#e4f2e4;color:#2f6f2f}.fb.f14{background:#f7eccf;color:#8a6410}.fb.f18{background:#f7e3d3;color:#a5521f}
@@ -324,32 +329,48 @@ function bars(id,rows,denom,opt){
 }
 /* gestapelde jaar-kolommen (klikbare legenda) */
 function yearchart(elId,legId,data,keys,opt){
-  opt=opt||{}; const off=new Set();
+  opt=opt||{}; let iso=null, gran='jaar', excl=false;
+  const decadeData=()=>{const m=new Map();
+    data.forEach(d=>{const dec=Math.floor(d.y/10)*10; let b=m.get(dec); if(!b){b={y:dec,dec:1};m.set(dec,b);}
+      keys.forEach(k=>b[k.k]=(b[k.k]||0)+(d[k.k]||0));});
+    return [...m.values()].sort((a,b)=>a.y-b.y);};
   function draw(){
-    const active=keys.filter(k=>!off.has(k.k));
-    const totals=data.map(d=>active.reduce((s,k)=>s+(d[k.k]||0),0));
+    const D=gran==='dec'?decadeData():data;
+    const active=keys.filter(k=>(!iso||k.k===iso)&&!(excl&&opt.exclude&&k.k===opt.exclude.k));
+    const totals=D.map(d=>active.reduce((sm,k)=>sm+(d[k.k]||0),0));
     const maxY=Math.max(1,...totals);
-    const el=document.getElementById(elId);
-    let occ='';
-    if(opt.occ){const i0=data.findIndex(d=>d.y===opt.occ[0]),i1=data.findIndex(d=>d.y===opt.occ[1]);
-      if(i0>=0&&i1>=0){const l=i0/data.length*100,r=(i1+1)/data.length*100;
+    const el=document.getElementById(elId); let occ='';
+    if(opt.occ&&gran==='jaar'){const i0=D.findIndex(d=>d.y===opt.occ[0]),i1=D.findIndex(d=>d.y===opt.occ[1]);
+      if(i0>=0&&i1>=0){const l=i0/D.length*100,r=(i1+1)/D.length*100;
         occ=`<div class="occband" style="left:${l}%;right:${100-r}%"><span>${opt.occLabel||''}</span></div>`;}}
-    el.innerHTML=occ+data.map((d,idx)=>{
-      const tot=totals[idx];
+    el.innerHTML=occ+D.map((d,idx)=>{
+      const tot=totals[idx], per=d.dec?`${d.y}–${d.y+9}`:d.y;
       const segs=active.filter(k=>d[k.k]).map(k=>
-        `<div class="yseg" data-tip="<b>${d.y} · ${esc(k.lab)}</b><br>${nl(d[k.k])} ${opt.unit||'films'}" style="height:${d[k.k]/maxY*100}%;background:${k.col}"></div>`).join('');
-      const cap=opt.everyLabel? (d.y%opt.everyLabel===0?`<div class="ycap"><b>${d.y%10===0?d.y:String(d.y).slice(2)}</b></div>`:'<div class="ycap">&nbsp;</div>')
-                              : `<div class="ycap"><b>${nl(tot)}</b>${d.y}</div>`;
+        `<div class="yseg" data-tip="<b>${per} · ${esc(k.lab)}</b><br>${nl(d[k.k])} ${opt.unit||'films'}" style="height:${d[k.k]/maxY*100}%;background:${k.col}"></div>`).join('');
+      const lbl=d.dec?`${String(d.y).slice(2)}s`:(d.y%10===0?d.y:String(d.y).slice(2));
+      const showLbl=d.dec||!opt.everyLabel||d.y%opt.everyLabel===0;
+      const cap=(opt.everyLabel||d.dec)?`<div class="ycap">${showLbl?`<b>${lbl}</b>`:'&nbsp;'}</div>`
+                                       :`<div class="ycap"><b>${nl(tot)}</b>${d.y}</div>`;
       return `<div class="ycol"><div class="ystack" data-y="${d.y}" style="height:${tot/maxY*100}%">${segs}</div>${cap}</div>`;
     }).join('');
-    if(opt.onClick) el.querySelectorAll('.ystack').forEach(s=>s.onclick=()=>opt.onClick(+s.dataset.y));
+    if(opt.onClick&&gran==='jaar') el.querySelectorAll('.ystack').forEach(x=>x.onclick=()=>opt.onClick(+x.dataset.y));
     bindTips();
   }
   const legEl=legId&&document.getElementById(legId);
-  if(legEl){legEl.innerHTML=keys.map(k=>
-    `<span data-k="${k.k}"><i style="background:${k.col}"></i>${esc(k.lab)}</span>`).join('')+(opt.legExtra||'');
-  legEl.querySelectorAll('span[data-k]').forEach(sp=>sp.onclick=()=>{
-    const k=sp.dataset.k; off.has(k)?off.delete(k):off.add(k); sp.classList.toggle('off'); draw();});}
+  if(legEl){
+    let tg='';
+    if(opt.exclude) tg+=`<span class="toggle" data-tg="excl"><button data-v="0" class="on">met ${esc(opt.exclude.label)}</button><button data-v="1">zonder ${esc(opt.exclude.label)}</button></span>`;
+    if(opt.decade)  tg+=`<span class="toggle" data-tg="gran"><button data-v="jaar" class="on">per jaar</button><button data-v="dec">per decennium</button></span>`;
+    legEl.innerHTML=keys.map(k=>`<span data-k="${k.k}"><i style="background:${k.col}"></i>${esc(k.lab)}</span>`).join('')
+      +(opt.legExtra||'')+(tg?`<span class="legtools">${tg}</span>`:'');
+    legEl.querySelectorAll('span[data-k]').forEach(sp=>sp.onclick=()=>{
+      const k=sp.dataset.k; iso=(iso===k?null:k);
+      legEl.querySelectorAll('span[data-k]').forEach(x=>x.classList.toggle('off',iso&&x.dataset.k!==iso)); draw();});
+    legEl.querySelectorAll('.toggle[data-tg="gran"] button').forEach(b=>b.onclick=()=>{
+      gran=b.dataset.v; b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); draw();});
+    legEl.querySelectorAll('.toggle[data-tg="excl"] button').forEach(b=>b.onclick=()=>{
+      excl=b.dataset.v==='1'; b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); draw();});
+  }
   draw();
 }
 
@@ -370,9 +391,9 @@ function buildInzichten(){
   const tkeys=[{k:'A',lab:'Alle leeftijden',col:'var(--A)'},{k:'f14',lab:'14 jaar',col:'var(--f14)'},
     {k:'f18',lab:'18 jaar',col:'var(--f18)'},{k:'X',lab:'Verboden',col:'var(--X)'},{k:'q',lab:'Onbekend',col:'var(--q)'}];
   yearchart('timeline','timeline-leg',s.timeline.map(t=>({y:t.y,A:t.A,f14:t.f14,f18:t.f18,X:t.X,q:t.q})),tkeys,
-    {occ:[1940,1945],occLabel:'bezetting',legExtra:'<span style="cursor:default"><i style="background:#1f293712"></i>bezetting 1940–’45</span>',
+    {occ:[1940,1945],occLabel:'bezetting',decade:true,
      onClick:y=>{document.getElementById('year').value=y;openTab('zoeken');applyFilters();}});
-  setSub('timeline','gestapeld naar oordeel · klik de legenda om te filteren, of een kolom om dat jaar te doorzoeken');
+  setSub('timeline','gestapeld naar oordeel · klik een reeks om te isoleren, of een kolom om dat jaar te doorzoeken');
 
   // Oordeel
   const ov=['A','14','18','X','?'].filter(k=>s.oordeel[k]);
@@ -408,8 +429,8 @@ function buildInzichten(){
   // Herkomst over tijd
   const cs=(s.topCountries||[]).concat(['Overig']);
   const ckeys=cs.map((c,i)=>({k:c,lab:c,col:PALETTE[i%PALETTE.length]}));
-  yearchart('originchart','origin-leg',(s.countryByYear||[]),ckeys,{occ:[1940,1945],occLabel:'bezetting',everyLabel:5});
-  setSub('origin','land van herkomst per eerste keuringsjaar · klik de legenda om te filteren',s.coverage.country,'Herkomst uit Wikidata; alleen fictiefilms met bekend land.');
+  yearchart('originchart','origin-leg',(s.countryByYear||[]),ckeys,{occ:[1940,1945],occLabel:'bezetting',everyLabel:5,decade:true,exclude:{k:'Verenigde Staten',label:'VS'}});
+  setSub('origin','land van herkomst per eerste keuringsjaar · klik een reeks om te isoleren',s.coverage.country,'Herkomst uit Wikidata; alleen fictiefilms met bekend land.');
 
   // Acteurs — met IMDb-links
   const imdbName=id=>`https://www.imdb.com/name/${id}`;
@@ -490,7 +511,7 @@ function applyFilters(){ ensureFilms(()=>{
     if(state.re&&!f.ho)return false;
     if(state.fic&&f.c!==1)return false;
     if(state.poster&&!f.p)return false;
-    if(q){if(!(norm(f.t)+' '+norm(f.a)+' '+norm(f.f)+' '+norm((f.cast||[]).join(' '))+' '+norm((f.di||[]).join(' '))).includes(q))return false;}
+    if(q){if(!(norm(f.t)+' '+norm((f.alt||[]).join(' '))+' '+norm(f.a)+' '+norm(f.f)+' '+norm((f.cast||[]).join(' '))+' '+norm((f.di||[]).join(' '))).includes(q))return false;}
     return true;
   });
   const cmp={d:(a,b)=>(b.d||'').localeCompare(a.d||''),da:(a,b)=>(a.d||'').localeCompare(b.d||''),
@@ -525,6 +546,7 @@ function fcard(f){
   const poster=f.p?`<img class="poster" loading="lazy" src="https://image.tmdb.org/t/p/w154${f.p}" alt="">`:'';
   return `<div class="fcard o-${cls} ${f.o==='X'?'banned':''}"><div class="accent"></div>${poster}<div class="body">`+
     `<h3>${esc(f.t)||'‹zonder titel›'}</h3>`+
+    (f.alt&&f.alt.length?`<div class="m alt">ook bekend als: ${esc(f.alt.join(' · '))}</div>`:'')+
     `<div class="m">${yr||'?'}${f.m?` · ${nl(f.m)} m`:''}${meta?` · ${esc(meta)}`:''}</div>`+
     (credit.length?`<div class="m credit">${credit.join(' · ')}</div>`:'')+
     (cg?`<div class="m">${esc(cg)}</div>`:'')+
