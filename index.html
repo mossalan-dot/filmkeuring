@@ -101,6 +101,8 @@
   .ltab td{padding:5px 6px;border-top:1px solid var(--line)}
   .ltab td.nm{font-weight:600}
   /* verboden-galerij */
+  .wallctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:2px 0 12px}
+  .wallctrl input{flex:1 1 200px;min-width:160px;border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:14px;outline:none}
   .wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin-top:4px}
   .vt{position:relative;aspect-ratio:2/3;border-radius:9px;overflow:hidden;text-decoration:none;display:block;
     background:linear-gradient(160deg,#f3d9d6,#eef1f4);border:1px solid var(--cream-line);box-shadow:0 1px 4px rgba(0,0,0,.08)}
@@ -117,6 +119,13 @@
   .search{flex:1 1 240px;min-width:200px;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 13px}
   .search input{border:0;background:transparent;color:var(--ink);font-size:15px;width:100%;outline:none}
   select{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:9px 11px;font-size:14px;font-weight:500}
+  .yearslider{position:relative;flex:1 1 230px;min-width:200px;height:42px;padding:0 8px}
+  .yearslider .yrlab{position:absolute;top:0;left:0;right:0;text-align:center;font-size:12px;color:var(--muted);font-weight:600}
+  .ytrack{position:absolute;left:8px;right:8px;top:27px;height:4px;background:#e5e7eb;border-radius:3px}
+  .yfill{position:absolute;height:100%;background:var(--accent);border-radius:3px}
+  .yearslider input[type=range]{position:absolute;left:8px;top:19px;width:calc(100% - 16px);margin:0;height:20px;background:none;pointer-events:none;-webkit-appearance:none;appearance:none}
+  .yearslider input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--accent);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  .yearslider input[type=range]::-moz-range-thumb{pointer-events:auto;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--accent);cursor:pointer}
   .chips{display:flex;flex-wrap:wrap;gap:7px}
   .chip{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;font-weight:600;user-select:none}
   .chip[aria-pressed="true"]{color:#fff;border-color:transparent}
@@ -244,6 +253,10 @@
 
       <div class="card w12">
         <h2 id="h-banned">Het kabinet van de verboden film</h2><div class="sub" id="s-banned"></div>
+        <div class="wallctrl">
+          <input id="wallq" type="search" placeholder="Zoek in verboden films…" autocomplete="off">
+          <div class="chips" id="wallDec"></div>
+        </div>
         <div class="wall" id="wall"></div>
         <button class="morebtn" id="wallMore" style="display:none"></button>
       </div>
@@ -256,7 +269,11 @@
       leeftijdsoordeel, geknipte films, herkeuringen en fictie.</p>
     <div class="controls">
       <label class="search">🔎<input id="q" type="search" placeholder="Zoek op titel, acteur, regisseur, studio of aanvrager…" autocomplete="off"></label>
-      <select id="year"></select>
+      <div class="yearslider">
+        <span class="yrlab" id="yrLab">Alle jaren</span>
+        <div class="ytrack"><div class="yfill" id="yfill"></div></div>
+        <input type="range" id="yrMin"><input type="range" id="yrMax">
+      </div>
       <select id="sort">
         <option value="d">Nieuwste keuring eerst</option>
         <option value="da">Oudste keuring eerst</option>
@@ -406,7 +423,7 @@ function yearchart(elId,legId,data,keys,opt){
 }
 
 /* ---------- laden ---------- */
-fetch('stats.json?v=3').then(r=>r.json()).then(d=>{STATS=d.stats; buildInzichten(); buildYearSelect();});
+fetch('stats.json?v=4').then(r=>r.json()).then(d=>{STATS=d.stats; buildInzichten(); setupYear();});
 
 function buildInzichten(){
   const s=STATS;
@@ -423,7 +440,7 @@ function buildInzichten(){
     {k:'f18',lab:'18 jaar',col:'var(--f18)'},{k:'X',lab:'Verboden',col:'var(--X)'},{k:'q',lab:'Onbekend',col:'var(--q)'}];
   yearchart('timeline','timeline-leg',s.timeline.map(t=>({y:t.y,A:t.A,f14:t.f14,f18:t.f18,X:t.X,q:t.q})),tkeys,
     {occ:[1940,1945],occLabel:'bezetting',decade:true,
-     onClick:y=>{document.getElementById('year').value=y;openTab('zoeken');applyFilters();}});
+     onClick:y=>{openTab('zoeken');window._setYear(y);}});
   setSub('timeline','gestapeld naar oordeel · klik een reeks om te isoleren, of een kolom om dat jaar te doorzoeken');
 
   // Oordeel
@@ -489,28 +506,48 @@ function buildInzichten(){
   yearchart('lengthchart','',ld,[{k:'med',lab:'mediane lengte',col:'var(--accent)'}],{everyLabel:5,unit:'m'});
   setSub('length','mediane lengte (meter) van fictiefilms — de opkomst van de avondvullende film');
 
-  drawBanned();
+  initWall();
 }
 
 /* ---------- verboden-galerij ---------- */
-let wallShown=0; const WALL_PAGE=42;
+let wallShown=0; const WALL_PAGE=48; let wallQ='', wallDec=null;
 function tileHTML(b){
   const poster=b.p?`<img loading="lazy" src="https://image.tmdb.org/t/p/w185${b.p}" alt="">`:'';
   const href=b.ci?`https://www.cinemacontext.nl/id/${b.ci}`:b.id?`https://www.nationaalarchief.nl/onderzoeken/index/nt00402/${b.id}`:'#';
   return `<a class="vt" href="${href}" target="_blank" rel="noopener" data-tip="<b>${esc(b.t)}</b> (${b.y||'?'})${b.f?'<br>'+esc(b.f):''}">`+
     poster+(b.y?`<span class="yr">${b.y}</span>`:'')+`<span class="cap"><b>${esc(b.t)||'‹zonder titel›'}</b></span></a>`;
 }
-function drawBanned(){
-  const all=STATS.bannedList||[]; const wp=all.filter(b=>b.p); const list=wp.length?wp:all;
-  setSub('banned',`${nl(all.length)} verboden films · ${nl(wp.length)} met bewaard affiche`);
-  const wall=document.getElementById('wall');
+function bannedFiltered(){
+  const all=STATS.bannedList||[]; const q=wallQ?norm(wallQ):'';
+  return all.filter(b=>{
+    if(wallDec!=null&&Math.floor(+b.y/10)*10!==wallDec)return false;
+    if(q&&!norm(b.t).includes(q))return false;
+    return true;});
+}
+function drawBanned(reset){
+  if(reset){wallShown=0;document.getElementById('wall').innerHTML='';}
+  const list=bannedFiltered();
   const slice=list.slice(wallShown,wallShown+WALL_PAGE);
-  wall.insertAdjacentHTML('beforeend',slice.map(tileHTML).join('')); wallShown+=slice.length;
+  document.getElementById('wall').insertAdjacentHTML('beforeend',slice.map(tileHTML).join('')); wallShown+=slice.length;
+  const wp=list.filter(b=>b.p).length;
+  setSub('banned',`${nl(list.length)} verboden films${wallDec!=null||wallQ?` (gefilterd)`:''} · ${nl(wp)} met bewaard affiche`);
   const btn=document.getElementById('wallMore');
-  if(wallShown<list.length){btn.style.display='block';btn.textContent=`Toon alle ${nl(list.length)}`;}else btn.style.display='none';
+  if(wallShown<list.length){btn.style.display='block';btn.textContent=`Toon meer (${nl(list.length-wallShown)})`;}else btn.style.display='none';
   bindTips();
 }
-document.getElementById('wallMore').onclick=drawBanned;
+function initWall(){
+  const yrs=(STATS.bannedList||[]).map(b=>Math.floor(+b.y/10)*10).filter(d=>d>0);
+  const decs=[...new Set(yrs)].sort();
+  document.getElementById('wallDec').innerHTML=`<span class="chip ct" data-d="" aria-pressed="true">Alle</span>`+
+    decs.map(d=>`<span class="chip ct" data-d="${d}" aria-pressed="false">${d}s</span>`).join('');
+  document.getElementById('wallDec').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;
+    document.querySelectorAll('#wallDec .chip').forEach(x=>x.setAttribute('aria-pressed','false'));
+    c.setAttribute('aria-pressed','true'); wallDec=c.dataset.d===''?null:+c.dataset.d; drawBanned(true);});
+  let wd; document.getElementById('wallq').addEventListener('input',e=>{clearTimeout(wd);
+    wd=setTimeout(()=>{wallQ=e.target.value;drawBanned(true);},170);});
+  drawBanned(true);
+}
+document.getElementById('wallMore').onclick=()=>drawBanned(false);
 
 /* ---------- tabs ---------- */
 function openTab(name){
@@ -522,11 +559,19 @@ function openTab(name){
 document.querySelectorAll('.tabbar button').forEach(b=>b.onclick=()=>openTab(b.dataset.pane));
 
 /* ---------- zoeken ---------- */
-const state={q:'',year:'',oordeel:new Set(),cat:new Set(),cut:false,re:false,poster:false,sort:'d'};
+const state={q:'',yearFrom:null,yearTo:null,oordeel:new Set(),cat:new Set(),cut:false,re:false,poster:false,sort:'d'};
 let filtered=[],shown=0; const PAGE=48;
-function buildYearSelect(){
-  document.getElementById('year').innerHTML='<option value="">Alle jaren</option>'+
-    STATS.years.map(v=>`<option value="${v}">${v}</option>`).join('');
+function setupYear(){
+  const ys=STATS.years, YMIN=ys[0], YMAX=ys[ys.length-1];
+  const mn=document.getElementById('yrMin'), mx=document.getElementById('yrMax');
+  const fill=document.getElementById('yfill'), lab=document.getElementById('yrLab');
+  mn.min=mx.min=YMIN; mn.max=mx.max=YMAX; mn.value=YMIN; mx.value=YMAX;
+  function upd(push){let a=+mn.value,b=+mx.value; if(a>b){[a,b]=[b,a];}
+    fill.style.left=((a-YMIN)/(YMAX-YMIN)*100)+'%'; fill.style.right=((YMAX-b)/(YMAX-YMIN)*100)+'%';
+    const full=(a===YMIN&&b===YMAX); lab.textContent=full?'Alle jaren':(a===b?a:`${a} – ${b}`);
+    if(push){state.yearFrom=full?null:a; state.yearTo=full?null:b; applyFilters();}}
+  mn.oninput=()=>upd(false); mx.oninput=()=>upd(false); mn.onchange=()=>upd(true); mx.onchange=()=>upd(true);
+  window._setYear=y=>{mn.value=y;mx.value=y;upd(true);}; upd(false);
 }
 function ensureFilms(cb){ if(FILMS){cb();return;}
   document.getElementById('count').textContent='Films laden…';
@@ -535,7 +580,7 @@ function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/
 function applyFilters(){ ensureFilms(()=>{
   const q=norm(state.q);
   filtered=FILMS.filter(f=>{
-    if(state.year&&(f.d||'').slice(0,4)!==state.year)return false;
+    if(state.yearFrom){const y=+((f.d||'0').slice(0,4)); if(y<state.yearFrom||y>state.yearTo)return false;}
     if(state.oordeel.size&&!state.oordeel.has(f.o))return false;
     if(state.cut&&!f.k)return false;
     if(state.re&&!f.ho)return false;
@@ -585,7 +630,6 @@ function fcard(f){
 }
 let deb;
 document.getElementById('q').addEventListener('input',e=>{clearTimeout(deb);deb=setTimeout(()=>{state.q=e.target.value;applyFilters();},170);});
-document.getElementById('year').addEventListener('change',e=>{state.year=e.target.value;applyFilters();});
 document.getElementById('sort').addEventListener('change',e=>{state.sort=e.target.value;applyFilters();});
 document.querySelector('.filterbar').addEventListener('change',e=>{const t=e.target;if(t.tagName!=='INPUT')return;
   if('o' in t.dataset){t.checked?state.oordeel.add(t.dataset.o):state.oordeel.delete(t.dataset.o);}
