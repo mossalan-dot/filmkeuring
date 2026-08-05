@@ -302,12 +302,51 @@ if ac:
         reach = e["iv"] or 0
         cens = 1 if (e["banned"] or e["cut"]) else 0
         for a in cast:
-            s = astat.setdefault(a["id"], {"n": a["n"], "films": 0, "reach": 0, "cens": 0})
+            s = astat.setdefault(a["id"], {"n": a["n"], "id": a["id"], "films": 0, "reach": 0, "cens": 0})
             s["films"] += 1; s["reach"] += reach; s["cens"] += cens
     alist = list(astat.values())
+    for a in alist:
+        a["pct"] = round(100 * a["cens"] / a["films"]) if a["films"] else 0
     stats["topActors"] = sorted(alist, key=lambda x: -x["films"])[:24]
-    stats["starsCensored"] = sorted([a for a in alist if a["cens"] >= 2],
-                                    key=lambda x: (-x["cens"], -x["films"]))[:16]
+    # sterren in censuur: gerangschikt op aandeel van het (getoonde) oeuvre dat geknipt/verboden was
+    stats["starsCensored"] = sorted([a for a in alist if a["films"] >= 12 and a["cens"] >= 4],
+                                    key=lambda x: (-x["pct"], -x["cens"]))[:16]
+
+# regisseurs: aandeel gecensureerd
+for d in stats.get("censoredDirectors", []):
+    d["pct"] = round(100 * (d["banned"] + d["cut"]) / d["films"]) if d["films"] else 0
+
+# 6) Censuur door de tijd + filmlengte + smalfilm (per keuringsjaar, record-niveau)
+cens_year = defaultdict(lambda: {"cut": 0, "banned": 0, "tot": 0})
+len_year = defaultdict(list)
+smal_year = defaultdict(lambda: {"smal": 0, "tot": 0})
+for rec in films:
+    yr = (rec.get("d") or "")[:4]
+    if not yr.isdigit():
+        continue
+    y = int(yr)
+    cens_year[y]["tot"] += 1
+    if rec["o"] == "X":
+        cens_year[y]["banned"] += 1
+    if rec.get("k"):
+        cens_year[y]["cut"] += 1
+    smal_year[y]["tot"] += 1
+    if rec.get("s"):
+        smal_year[y]["smal"] += 1
+    if rec.get("c") == 1 and rec.get("m") and 100 <= rec["m"] <= 6000:
+        len_year[y].append(rec["m"])
+
+def _median(xs):
+    xs = sorted(xs); n = len(xs)
+    return None if not n else (xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2)
+
+stats["censTimeline"] = [dict({"y": y}, **cens_year[y]) for y in sorted(cens_year)]
+stats["lengthByYear"] = [{"y": y, "med": round(_median(len_year[y])), "n": len(len_year[y])}
+                         for y in sorted(len_year) if len_year[y]]
+stats["smalByYear"] = [{"y": y, "smal": smal_year[y]["smal"], "tot": smal_year[y]["tot"]}
+                       for y in sorted(smal_year)]
+stats["studioCoverage"] = {"withFabriek": sum(1 for r in films if r.get("f")),
+                           "total": len(films), "distinct": len(studio_count)}
 
 stats["coverage"] = {"tt": n_tt, "rating": n_rating, "poster": n_poster,
                      "country": sum(1 for e in by_tt.values() if e["co"]),
