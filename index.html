@@ -9,7 +9,7 @@
   :root{
     --accent:#0e7490; --accent-dark:#155e75;
     --A:#4f9d4f; --f14:#d99a2b; --f18:#d67a2e; --X:#be123c; --q:#94a3b8;
-    --cream:#faf7ee; --cream-line:#ece2c9;
+    --cream:#faf7ee; --cream-line:#ece2c9; --gold:#9a7420;
     --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb; --card:#fff; --bg:#f6f7f5;
   }
   *{box-sizing:border-box}
@@ -39,6 +39,29 @@
   .intro b{color:var(--ink)}
   .tabpane{display:none}
   .tabpane.on{display:block}
+  /* Bijzondere vondsten — Carnegie-stijl */
+  .finds{position:relative;background:var(--cream);border:1px solid var(--cream-line);border-radius:14px;padding:16px 62px;margin-bottom:26px}
+  .finds .flabel{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);font-weight:700;margin-bottom:11px}
+  .finds .navb button{position:absolute;top:calc(50% + 6px);transform:translateY(-50%);width:40px;height:66px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:20px;color:var(--ink);line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06);z-index:2}
+  .finds #fprev{left:12px}.finds #fnext{right:12px}
+  .finds .navb button:hover{border-color:var(--accent);color:var(--accent)}
+  .track2{display:flex;gap:16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .track2::-webkit-scrollbar{display:none}
+  .find{flex:0 0 100%;background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px 24px;display:flex;gap:18px;align-items:flex-start}
+  .find .femoji{font-size:38px;line-height:1;flex:none;margin-top:2px}
+  .find .fcontent{flex:1;min-width:0}
+  .find .tag{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);font-weight:600}
+  .find h3{margin:4px 0 8px;font-size:18px;line-height:1.25}
+  .find p{margin:0 0 12px;font-size:14px;color:#374151;line-height:1.55}
+  .find .meta{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;margin-bottom:12px}
+  .find .flinks{display:flex;flex-wrap:wrap;gap:7px}
+  .find .flinks a{font-size:12px;text-decoration:none;padding:5px 11px;border-radius:20px;background:#e8f4f7;color:var(--accent);white-space:nowrap;font-weight:500;cursor:pointer}
+  .find .flinks a.ext{background:#f2f2f3;color:var(--muted);font-weight:400}
+  .find .flinks a:hover{filter:brightness(.96)}
+  .fdots{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;margin-top:14px}
+  .fdots i{width:7px;height:7px;border-radius:50%;background:#d6cdb5;cursor:pointer;transition:width .2s}
+  .fdots i.on{background:var(--gold);width:18px;border-radius:4px}
+  @media(max-width:620px){.finds{padding:16px 14px}.finds .navb button{display:none}.find{padding:16px;gap:12px}.find .femoji{font-size:30px}}
   /* KPI */
   .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:26px}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;position:relative}
@@ -126,6 +149,9 @@
   .yearslider input[type=range]{position:absolute;left:8px;top:19px;width:calc(100% - 16px);margin:0;height:20px;background:none;pointer-events:none;-webkit-appearance:none;appearance:none}
   .yearslider input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--accent);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.25)}
   .yearslider input[type=range]::-moz-range-thumb{pointer-events:auto;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--accent);cursor:pointer}
+  .glabel{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  .yearrow{align-items:center}
+  .yearrow .yearslider{flex:0 1 380px}
   .chips{display:flex;flex-wrap:wrap;gap:7px}
   .chip{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;font-weight:600;user-select:none}
   .chip[aria-pressed="true"]{color:#fff;border-color:transparent}
@@ -193,6 +219,13 @@
       verrijkt met IMDb, posters en Wikidata, met per film een link naar het originele dossier bij het NA.</p>
 
     <div class="kpis" id="kpis"></div>
+
+    <div class="finds">
+      <div class="flabel">Bijzondere vondsten</div>
+      <div class="track2" id="finds"></div>
+      <div class="navb"><button id="fprev" aria-label="vorige">‹</button><button id="fnext" aria-label="volgende">›</button></div>
+      <div class="fdots" id="fdots"></div>
+    </div>
 
     <div class="grid">
       <div class="card w12">
@@ -269,11 +302,6 @@
       leeftijdsoordeel, geknipte films, herkeuringen en fictie.</p>
     <div class="controls">
       <label class="search">🔎<input id="q" type="search" placeholder="Zoek op titel, acteur, regisseur, studio of aanvrager…" autocomplete="off"></label>
-      <div class="yearslider">
-        <span class="yrlab" id="yrLab">Alle jaren</span>
-        <div class="ytrack"><div class="yfill" id="yfill"></div></div>
-        <input type="range" id="yrMin"><input type="range" id="yrMax">
-      </div>
       <select id="sort">
         <option value="d">Nieuwste keuring eerst</option>
         <option value="da">Oudste keuring eerst</option>
@@ -281,6 +309,14 @@
         <option value="m">Langste film eerst</option>
         <option value="r">Hoogste IMDb-score</option>
       </select>
+    </div>
+    <div class="controls yearrow">
+      <span class="glabel">Periode</span>
+      <div class="yearslider">
+        <span class="yrlab" id="yrLab">Alle jaren</span>
+        <div class="ytrack"><div class="yfill" id="yfill"></div></div>
+        <input type="range" id="yrMin"><input type="range" id="yrMax">
+      </div>
     </div>
     <div class="filterbar">
       <div class="fgroup"><span class="glabel">Leeftijd</span>
@@ -371,7 +407,7 @@ function stackBars(id,rows,opt){
   document.getElementById(id).innerHTML=html; bindTips();
 }
 /* gestapelde jaar-kolommen (klikbare legenda) */
-function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v)));const n=v/p;const st=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;return st*p;}
+function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v)));const n=v/p;const st=n<=1?1:n<=1.5?1.5:n<=2?2:n<=2.5?2.5:n<=5?5:10;return st*p;}
 function axisLabel(v,unit){if(unit==='%')return Math.round(v)+'%';if(v>=1000){const k=v/1000;return (k%1?k.toFixed(1):k)+'k';}return Math.round(v);}
 function yearchart(elId,legId,data,keys,opt){
   opt=opt||{}; let iso=null, gran='jaar', excl=false;
@@ -423,7 +459,7 @@ function yearchart(elId,legId,data,keys,opt){
 }
 
 /* ---------- laden ---------- */
-fetch('stats.json?v=4').then(r=>r.json()).then(d=>{STATS=d.stats; buildInzichten(); setupYear();});
+fetch('stats.json?v=5').then(r=>r.json()).then(d=>{STATS=d.stats; buildInzichten(); setupYear();});
 
 function buildInzichten(){
   const s=STATS;
@@ -506,7 +542,65 @@ function buildInzichten(){
   yearchart('lengthchart','',ld,[{k:'med',lab:'mediane lengte',col:'var(--accent)'}],{everyLabel:5,unit:'m'});
   setSub('length','mediane lengte (meter) van fictiefilms — de opkomst van de avondvullende film');
 
+  renderFinds();
   initWall();
+}
+
+/* ---------- Bijzondere vondsten ---------- */
+const CCID=id=>`https://www.cinemacontext.nl/id/${id}`;
+const FINDS=[
+ {emoji:"🎭",tag:"Klassiekers voor de schaar",title:"Zelfs meesterwerken werden geweigerd",
+  body:"De commissie ontzag geen grote namen. Hustons The Maltese Falcon, Hitchcocks Rope, Buñuels Un Chien Andalou en Fellini's La Dolce Vita werden alle vier geheel verboden voor de Nederlandse bioscoop.",
+  meta:"4 van de 796 verboden films",
+  links:[["Maltezer valk",CCID('F021121')],["Rope",CCID('F015725')],["Andalusische Hond",CCID('F034706')],["Het Zoete leven",CCID('F018631')]]},
+ {emoji:"↩️",tag:"Tweede kans",title:"Van verboden naar toegelaten",
+  body:"Een verbod was niet altijd het eindpunt. 183 eerst geweigerde films kregen bij een herkeuring alsnog groen licht — soms jaren later, soms na het knippen van enkele scènes.",
+  meta:"183 films herzien",zoek:{oordeel:['X'],re:true},zoekLabel:"Bekijk de herziene films →"},
+ {emoji:"🇩🇪",tag:"De Duitse greep",title:"Wenen en Berlijn in de Nederlandse zaal",
+  body:"Geen ster kwam in dit corpus vaker voor dan de Weense acteur Paul Hörbiger, in 136 films. Met Theo Lingen, Hans Moser en Willy Fritsch weerspiegelt de top de dominantie van de Duitstalige film, die in de bezettingsjaren piekte.",
+  meta:"Paul Hörbiger · 136 films",
+  links:[["Paul Hörbiger op IMDb","https://www.imdb.com/name/nm0405977"]]},
+ {emoji:"✂️",tag:"De schaar",title:"De meest gecensureerde regisseur",
+  body:"Van Hollywood-vakman Michael Curtiz — later beroemd om Casablanca — werden achttien films geknipt of geheel verboden: elf coupures en zeven volledige verboden, bijna een kwart van zijn hier vertoonde werk.",
+  meta:"Michael Curtiz · 18 films"},
+ {emoji:"🎞️",tag:"Kolossen",title:"Ruim zes kilometer film",
+  body:"De langste film in de index is Gone with the Wind (1950): 6.179 meter celluloid, goed voor bijna vier uur. Alleen het afdraaien vulde al een complete bioscoopavond.",
+  meta:"Gejaagd door de wind · 6.179 m",
+  links:[["Gejaagd door de wind",CCID('F019441')]]},
+ {emoji:"📰",tag:"Aan de lopende band",title:"Elke week opnieuw langs de keuring",
+  body:"Naast de speelfilms passeerde een eindeloze stroom bioscoopjournaals. Het Paramount Journaal en Polygoon's wereldnieuws werden honderden keren afzonderlijk gekeurd — de industriële routine achter de filmkeuring.",
+  meta:"Paramount Journaal · 734 keuringen",zoek:{q:"journaal"},zoekLabel:"Doorzoek de journaals →"},
+];
+function _findZoek(cfg){
+  openTab('zoeken');
+  document.querySelectorAll('.filterbar input[type=checkbox]').forEach(c=>c.checked=false);
+  state.oordeel.clear(); state.cat.clear(); state.cut=false; state.re=false;
+  (cfg.oordeel||[]).forEach(o=>{state.oordeel.add(o);const el=document.querySelector(`.filterbar input[data-o="${o}"]`);if(el)el.checked=true;});
+  if(cfg.re){state.re=true;const el=document.querySelector('.filterbar input[data-x="re"]');if(el)el.checked=true;}
+  if(cfg.q!=null){state.q=cfg.q;document.getElementById('q').value=cfg.q;}
+  applyFilters();
+}
+function renderFinds(){
+  const tr=document.getElementById('finds');
+  tr.innerHTML=FINDS.map(f=>{
+    let links=(f.links||[]).map(l=>`<a class="ext" href="${l[1]}" target="_blank" rel="noopener">${esc(l[0])} ↗</a>`).join('');
+    if(f.zoek) links+=`<a href="#" data-zoek='${esc(JSON.stringify(f.zoek))}'>${esc(f.zoekLabel||'Bekijk in de zoeker →')}</a>`;
+    return `<article class="find"><div class="femoji">${f.emoji}</div><div class="fcontent"><span class="tag">${esc(f.tag)}</span><h3>${esc(f.title)}</h3><p>${esc(f.body)}</p><div class="meta">${esc(f.meta)}</div><div class="flinks">${links}</div></div></article>`;
+  }).join('');
+  const dots=document.getElementById('fdots'); dots.innerHTML=FINDS.map((_,i)=>`<i data-i="${i}"></i>`).join('');
+  const dotEls=[...dots.children], step=()=>tr.clientWidth+16;
+  let cur=0; const setActive=i=>dotEls.forEach((d,j)=>d.classList.toggle('on',j===i)); setActive(0);
+  const go=i=>{cur=((i%FINDS.length)+FINDS.length)%FINDS.length; tr.scrollLeft=cur*step(); setActive(cur);};
+  let timer; const auto=()=>{clearInterval(timer);timer=setInterval(()=>go(cur+1),6000);};
+  const nav=i=>{go(i);auto();};
+  dotEls.forEach(d=>d.onclick=()=>nav(+d.dataset.i));
+  document.getElementById('fnext').onclick=()=>nav(cur+1);
+  document.getElementById('fprev').onclick=()=>nav(cur-1);
+  const finds=document.querySelector('.finds');
+  finds.addEventListener('mouseenter',()=>clearInterval(timer)); finds.addEventListener('mouseleave',auto);
+  let t; tr.addEventListener('scroll',()=>{clearTimeout(t);t=setTimeout(()=>{cur=Math.round(tr.scrollLeft/step());setActive(cur);},90);});
+  tr.addEventListener('click',e=>{const a=e.target.closest('a[data-zoek]');if(!a)return;e.preventDefault();_findZoek(JSON.parse(a.dataset.zoek));});
+  auto();
 }
 
 /* ---------- verboden-galerij ---------- */
@@ -575,7 +669,7 @@ function setupYear(){
 }
 function ensureFilms(cb){ if(FILMS){cb();return;}
   document.getElementById('count').textContent='Films laden…';
-  fetch('films.json?v=3').then(r=>r.json()).then(d=>{FILMS=d.films;cb();}); }
+  fetch('films.json?v=5').then(r=>r.json()).then(d=>{FILMS=d.films;cb();}); }
 function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
 function applyFilters(){ ensureFilms(()=>{
   const q=norm(state.q);
