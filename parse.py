@@ -296,12 +296,14 @@ dir_stat = defaultdict(lambda: {"films": 0, "banned": 0, "cut": 0})
 for e in by_tt.values():
     for d in (e["di"] or []):
         s = dir_stat[d]; s["films"] += 1
-        if e["banned"]: s["banned"] += 1
-        if e["cut"]:    s["cut"] += 1
+        if e["banned"]:  s["banned"] += 1   # verboden
+        elif e["cut"]:   s["cut"] += 1      # geknipt (niet verboden) -> geen dubbeltelling
 dirs = [{"n": d, **s} for d, s in dir_stat.items()]
+for d in dirs:
+    d["cens"] = d["banned"] + d["cut"]
+    d["pct"] = round(100 * d["cens"] / d["films"]) if d["films"] else 0
 stats["topDirectors"] = sorted(dirs, key=lambda x: -x["films"])[:18]
-stats["censoredDirectors"] = sorted([d for d in dirs if d["banned"] + d["cut"] >= 2],
-                                    key=lambda x: -(x["banned"] + x["cut"]))[:15]
+stats["censoredDirectors"] = sorted([d for d in dirs if d["cens"] >= 2], key=lambda x: -x["cens"])[:15]
 
 # 4) Genre × oordeel
 genre_o = defaultdict(lambda: Counter())
@@ -323,19 +325,18 @@ if ac:
         reach = e["iv"] or 0
         cens = 1 if (e["banned"] or e["cut"]) else 0
         for a in cast:
-            s = astat.setdefault(a["id"], {"n": a["n"], "id": a["id"], "films": 0, "reach": 0, "cens": 0})
-            s["films"] += 1; s["reach"] += reach; s["cens"] += cens
+            s = astat.setdefault(a["id"], {"n": a["n"], "id": a["id"], "films": 0, "reach": 0, "banned": 0, "cut": 0})
+            s["films"] += 1; s["reach"] += reach
+            if e["banned"]:  s["banned"] += 1
+            elif e["cut"]:   s["cut"] += 1
     alist = list(astat.values())
     for a in alist:
+        a["cens"] = a["banned"] + a["cut"]
         a["pct"] = round(100 * a["cens"] / a["films"]) if a["films"] else 0
     stats["topActors"] = sorted(alist, key=lambda x: -x["films"])[:24]
     # sterren in censuur: gerangschikt op aandeel van het (getoonde) oeuvre dat geknipt/verboden was
     stats["starsCensored"] = sorted([a for a in alist if a["films"] >= 12 and a["cens"] >= 4],
                                     key=lambda x: (-x["pct"], -x["cens"]))[:16]
-
-# regisseurs: aandeel gecensureerd
-for d in stats.get("censoredDirectors", []):
-    d["pct"] = round(100 * (d["banned"] + d["cut"]) / d["films"]) if d["films"] else 0
 
 # 6) Censuur door de tijd + filmlengte + smalfilm (per keuringsjaar, record-niveau)
 cens_year = defaultdict(lambda: {"cut": 0, "banned": 0, "tot": 0})

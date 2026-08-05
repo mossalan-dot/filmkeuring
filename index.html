@@ -123,6 +123,11 @@
   .chip.cA[aria-pressed="true"]{background:var(--A)}.chip.c14[aria-pressed="true"]{background:var(--f14);color:#3a2c05}
   .chip.c18[aria-pressed="true"]{background:var(--f18)}.chip.cX[aria-pressed="true"]{background:var(--X)}
   .chip.ct[aria-pressed="true"]{background:var(--accent)}
+  .filterbar{display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:12px;align-items:center}
+  .fgroup{display:flex;flex-wrap:wrap;gap:5px 12px;align-items:center}
+  .fgroup .glabel{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-right:2px}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;user-select:none;color:var(--ink)}
+  .chk input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;margin:0}
   .count{color:var(--muted);font-size:13px;margin:2px 2px 12px}.count b{color:var(--ink)}
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
   .fcard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 14px;display:flex;gap:12px;position:relative;overflow:hidden}
@@ -260,18 +265,20 @@
         <option value="r">Hoogste IMDb-score</option>
       </select>
     </div>
-    <div class="controls">
-      <div class="chips" id="oordeelchips">
-        <span class="chip cA" data-o="A" aria-pressed="false">Alle leeftijden</span>
-        <span class="chip c14" data-o="14" aria-pressed="false">14 jaar</span>
-        <span class="chip c18" data-o="18" aria-pressed="false">18 jaar</span>
-        <span class="chip cX" data-o="X" aria-pressed="false">Verboden</span>
+    <div class="filterbar">
+      <div class="fgroup"><span class="glabel">Leeftijd</span>
+        <label class="chk"><input type="checkbox" data-o="A"> Alle leeftijden</label>
+        <label class="chk"><input type="checkbox" data-o="14"> 14 jaar</label>
+        <label class="chk"><input type="checkbox" data-o="18"> 18 jaar</label>
+        <label class="chk"><input type="checkbox" data-o="X"> Verboden</label>
       </div>
-      <div class="chips">
-        <span class="chip ct" id="cutchip" aria-pressed="false">✂ Geknipt</span>
-        <span class="chip ct" id="rechip" aria-pressed="false">↻ Herkeurd</span>
-        <span class="chip ct" id="ficchip" aria-pressed="false">🎬 Fictie</span>
-        <span class="chip ct" id="posterchip" aria-pressed="false">🖼 Met poster</span>
+      <div class="fgroup"><span class="glabel">Soort</span>
+        <label class="chk"><input type="checkbox" data-c="1"> Fictie</label>
+        <label class="chk"><input type="checkbox" data-c="0"> Non-fictie</label>
+      </div>
+      <div class="fgroup"><span class="glabel">Overig</span>
+        <label class="chk"><input type="checkbox" data-x="cut"> ✂ Geknipt</label>
+        <label class="chk"><input type="checkbox" data-x="re"> ↻ Herkeurd</label>
       </div>
     </div>
     <div class="count" id="count">Laden…</div>
@@ -293,6 +300,7 @@ const OL={A:"Alle leeftijden","14":"14 jaar","18":"18 jaar",X:"Verboden","?":"On
 const OC={A:"var(--A)","14":"var(--f14)","18":"var(--f18)",X:"var(--X)","?":"var(--q)"};
 const OCLS={A:"A","14":"f14","18":"f18",X:"X","?":"q"};
 const PALETTE=['#0e7490','#2f6fb0','#8156b8','#1f9e8f','#d67a2e','#4f9d4f','#be123c','#0891b2'];
+const COUNTRY_PAL=['#4e79a7','#e15759','#59a14f','#f28e2b','#b07aa1','#edc948','#76b7b2','#9c755f'];
 const nl=n=>(+n).toLocaleString('nl');
 const pct=(a,b)=>b?Math.round(a/b*100)+'%':'–';
 const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -331,6 +339,19 @@ function bars(id,rows,denom,opt){
       `<span class="track"><span class="fill" style="width:${w}%;background:${col||PALETTE[i%PALETTE.length]}"></span></span>`+
       `<span class="val">${val}</span></div>`;
   }).join(''); bindTips();
+}
+
+function stackBars(id,rows,opt){
+  opt=opt||{}; const max=Math.max(1,...rows.map(r=>r[1].reduce((sm,x)=>sm+x[0],0)));
+  let html=rows.map(r=>{
+    const [lab,segs,valDisp,sub,href]=r;
+    const tip=`<b>${esc(lab)}</b><br>`+segs.filter(x=>x[0]).map(x=>`${esc(x[2])}: ${nl(x[0])}`).join(' · ');
+    const bar=segs.map(x=>x[0]?`<span class="seg" style="width:${x[0]/max*100}%;background:${x[1]}"></span>`:'').join('');
+    const labH=href?`<a href="${href}" target="_blank" rel="noopener">${esc(lab)}</a>`:esc(lab);
+    return `<div class="bar" data-tip="${tip.replace(/"/g,'&quot;')}"><span class="lab">${labH}${sub?` <span class="flag">· ${esc(sub)}</span>`:''}</span><span class="track">${bar}</span><span class="val">${valDisp}</span></div>`;
+  }).join('');
+  if(opt.legend) html+=`<div class="legend" style="margin-top:10px">`+opt.legend.map(l=>`<span style="cursor:default"><i style="background:${l[0]}"></i>${l[1]}</span>`).join('')+`</div>`;
+  document.getElementById(id).innerHTML=html; bindTips();
 }
 /* gestapelde jaar-kolommen (klikbare legenda) */
 function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v)));const n=v/p;const st=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;return st*p;}
@@ -428,17 +449,18 @@ function buildInzichten(){
 
   // Genre × gestrengheid (gestapelde balk)
   const gk=[{k:'A',lab:'Alle leeftijden',col:'var(--A)'},{k:'f14',lab:'14 jaar',col:'var(--f14)'},{k:'f18',lab:'18 jaar',col:'var(--f18)'},{k:'X',lab:'Verboden',col:'var(--X)'}];
-  document.getElementById('genrechart').innerHTML=(s.genreOordeel||[]).map(g=>{
+  const sev=g=>(g.f14*1+g.f18*2+g.X*3)/(g.tot||1);
+  document.getElementById('genrechart').innerHTML=[...(s.genreOordeel||[])].sort((a,b)=>sev(a)-sev(b)).map(g=>{
     const segs=gk.map(k=>{const v=g[k.k]||0; return v?`<span class="seg" data-tip="<b>${esc(g.g)} · ${k.lab}</b><br>${nl(v)} · ${pct(v,g.tot)}" style="width:${v/g.tot*100}%;background:${k.col}"></span>`:'';}).join('');
     return `<div class="bar"><span class="lab" title="${esc(g.g)}">${esc(g.g)}</span><span class="track">${segs}</span><span class="val">${nl(g.tot)}</span></div>`;
   }).join('');
   document.getElementById('genre-leg').innerHTML=gk.map(k=>`<span style="cursor:default"><i style="background:${k.col}"></i>${k.lab}</span>`).join('');
-  setSub('genre','aandeel van elk oordeel per genre (Wikidata)');
+  setSub('genre','aandeel van elk oordeel per genre · van mildst (boven) naar strengst (Wikidata)');
   bindTips();
 
   // Herkomst over tijd
   const cs=(s.topCountries||[]).concat(['Overig']);
-  const ckeys=cs.map((c,i)=>({k:c,lab:c,col:PALETTE[i%PALETTE.length]}));
+  const ckeys=cs.map((c,i)=>({k:c,lab:c,col:COUNTRY_PAL[i%COUNTRY_PAL.length]}));
   yearchart('originchart','origin-leg',(s.countryByYear||[]),ckeys,{occ:[1940,1945],occLabel:'bezetting',everyLabel:5,decade:true,exclude:{k:'Verenigde Staten',label:'VS'}});
   setSub('origin','land van herkomst per eerste keuringsjaar · klik een reeks om te isoleren',s.coverage.country,'Herkomst uit Wikidata; alleen fictiefilms met bekend land.');
 
@@ -448,15 +470,13 @@ function buildInzichten(){
     `${nl(a.reach)} IMDb-stemmen bereikt · ${a.cens}× in geknipte/verboden film`,null,imdbName(a.id)]),null);
   setSub('actors','aantal films uit dit corpus waarin de acteur voorkwam · klik voor IMDb',s.coverage.cast);
 
-  // Sterren in censuur — aandeel van het getoonde oeuvre
-  bars('starschart',(s.starsCensored||[]).map(a=>[a.n,a.pct,'var(--X)',
-    `${a.cens} van ${a.films} getoonde films geknipt of verboden`,null,imdbName(a.id)]),null,{fmt:v=>v+'%'});
-  setSub('stars','aandeel van het getoonde oeuvre dat geknipt of verboden werd · minstens 12 films');
-
-  // Regisseurs — aandeel gecensureerd
-  bars('dirchart',(s.censoredDirectors||[]).slice(0,12).map(d=>[d.n,d.banned+d.cut,'var(--f18)',
-    `${d.cut} geknipt · ${d.banned} verboden van ${d.films} films`,`${d.pct}%`,wikiUrl(d.n)]),null);
-  setSub('dir','geknipte of geheel verboden films per regisseur · % van hun getoonde oeuvre');
+  // Sterren & regisseurs in censuur — combibalk geknipt vs verboden
+  const censSegs=x=>[[x.cut,'var(--f18)','geknipt'],[x.banned,'var(--X)','verboden']];
+  const censLeg=[['var(--f18)','geknipt'],['var(--X)','verboden']];
+  stackBars('starschart',(s.starsCensored||[]).map(a=>[a.n,censSegs(a),`${a.pct}%`,null,imdbName(a.id)]),{legend:censLeg});
+  setSub('stars','geknipt vs. verboden · balk = aandeel van het getoonde oeuvre · min. 12 films');
+  stackBars('dirchart',(s.censoredDirectors||[]).map(d=>[d.n,censSegs(d),nl(d.cens),`${d.pct}%`,wikiUrl(d.n)]),{legend:censLeg});
+  setSub('dir','geknipt vs. verboden films per regisseur · % = aandeel van hun getoonde oeuvre');
 
   // Censuur door de tijd (aandeel per jaar)
   const cd=(s.censTimeline||[]).map(t=>({y:t.y,cut:t.tot?+(t.cut/t.tot*100).toFixed(1):0,banned:t.tot?+(t.banned/t.tot*100).toFixed(1):0}));
@@ -502,7 +522,7 @@ function openTab(name){
 document.querySelectorAll('.tabbar button').forEach(b=>b.onclick=()=>openTab(b.dataset.pane));
 
 /* ---------- zoeken ---------- */
-const state={q:'',year:'',oordeel:new Set(),cut:false,re:false,fic:false,poster:false,sort:'d'};
+const state={q:'',year:'',oordeel:new Set(),cat:new Set(),cut:false,re:false,poster:false,sort:'d'};
 let filtered=[],shown=0; const PAGE=48;
 function buildYearSelect(){
   document.getElementById('year').innerHTML='<option value="">Alle jaren</option>'+
@@ -519,7 +539,7 @@ function applyFilters(){ ensureFilms(()=>{
     if(state.oordeel.size&&!state.oordeel.has(f.o))return false;
     if(state.cut&&!f.k)return false;
     if(state.re&&!f.ho)return false;
-    if(state.fic&&f.c!==1)return false;
+    if(state.cat.size&&!state.cat.has(f.c))return false;
     if(state.poster&&!f.p)return false;
     if(q){if(!(norm(f.t)+' '+norm((f.alt||[]).join(' '))+' '+norm(f.a)+' '+norm(f.f)+' '+norm((f.cast||[]).join(' '))+' '+norm((f.di||[]).join(' '))).includes(q))return false;}
     return true;
@@ -567,10 +587,11 @@ let deb;
 document.getElementById('q').addEventListener('input',e=>{clearTimeout(deb);deb=setTimeout(()=>{state.q=e.target.value;applyFilters();},170);});
 document.getElementById('year').addEventListener('change',e=>{state.year=e.target.value;applyFilters();});
 document.getElementById('sort').addEventListener('change',e=>{state.sort=e.target.value;applyFilters();});
-document.getElementById('oordeelchips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;
-  const on=c.getAttribute('aria-pressed')==='true';c.setAttribute('aria-pressed',!on);on?state.oordeel.delete(c.dataset.o):state.oordeel.add(c.dataset.o);applyFilters();});
-[['cutchip','cut'],['rechip','re'],['ficchip','fic'],['posterchip','poster']].forEach(([id,key])=>{
-  const c=document.getElementById(id);c.onclick=()=>{const on=c.getAttribute('aria-pressed')==='true';c.setAttribute('aria-pressed',!on);state[key]=!on;applyFilters();};});
+document.querySelector('.filterbar').addEventListener('change',e=>{const t=e.target;if(t.tagName!=='INPUT')return;
+  if('o' in t.dataset){t.checked?state.oordeel.add(t.dataset.o):state.oordeel.delete(t.dataset.o);}
+  else if('c' in t.dataset){const c=+t.dataset.c;t.checked?state.cat.add(c):state.cat.delete(c);}
+  else if('x' in t.dataset){state[t.dataset.x]=t.checked;}
+  applyFilters();});
 document.getElementById('more').onclick=renderMore;
 </script>
 <script>window.goatcounter={path:function(p){return location.host+p}}</script>
