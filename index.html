@@ -206,8 +206,8 @@
 </div></header>
 
 <div class="tabbar">
-  <button id="tabbtn-inzichten" class="on" data-pane="inzichten">📊 Inzichten</button>
   <button id="tabbtn-zoeken" data-pane="zoeken">🔎 Zoeken</button>
+  <button id="tabbtn-inzichten" class="on" data-pane="inzichten">📊 Inzichten</button>
 </div>
 
 <main>
@@ -269,30 +269,22 @@
         <div class="bars" id="starschart"></div>
       </div>
 
-      <div class="card w6">
+      <div class="card w12">
         <h2 id="h-dir">Meest gecensureerde regisseurs</h2><div class="sub" id="s-dir"></div>
         <div class="bars" id="dirchart"></div>
       </div>
 
-      <div class="card w6">
+      <div class="card w12">
         <h2 id="h-cens">Censuur door de tijd</h2><div class="sub" id="s-cens"></div>
         <div class="yearchart" id="censchart"></div>
         <div class="legend" id="cens-leg"></div>
       </div>
-      <div class="card w6">
+      <div class="card w12">
         <h2 id="h-length">De film wordt langer</h2><div class="sub" id="s-length"></div>
         <div class="yearchart" id="lengthchart"></div>
       </div>
 
-      <div class="card w12">
-        <h2 id="h-banned">Het kabinet van de verboden film</h2><div class="sub" id="s-banned"></div>
-        <div class="wallctrl">
-          <input id="wallq" type="search" placeholder="Zoek in verboden films…" autocomplete="off">
-          <div class="chips" id="wallDec"></div>
-        </div>
-        <div class="wall" id="wall"></div>
-        <button class="morebtn" id="wallMore" style="display:none"></button>
-      </div>
+
     </div>
   </div>
 
@@ -407,7 +399,7 @@ function stackBars(id,rows,opt){
   document.getElementById(id).innerHTML=html; bindTips();
 }
 /* gestapelde jaar-kolommen (klikbare legenda) */
-function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v)));const n=v/p;const st=n<=1?1:n<=1.5?1.5:n<=2?2:n<=2.5?2.5:n<=5?5:10;return st*p;}
+function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v)));const n=v/p;const st=n<=1?1:n<=1.5?1.5:n<=2?2:n<=2.5?2.5:n<=3?3:n<=5?5:10;return st*p;}
 function axisLabel(v,unit){if(unit==='%')return Math.round(v)+'%';if(v>=1000){const k=v/1000;return (k%1?k.toFixed(1):k)+'k';}return Math.round(v);}
 function yearchart(elId,legId,data,keys,opt){
   opt=opt||{}; let iso=null, gran='jaar', excl=false;
@@ -500,16 +492,32 @@ function buildInzichten(){
     document.getElementById('rating-take').innerHTML=`<div class="takeaway">Geknipte films scoren gemiddeld <b>${rc.cut.mean.toFixed(2)}</b> — vrijwel gelijk aan niet-geknipte films (<b>${rc.uncut.mean.toFixed(2)}</b>). De schaar volgde de zeden, niet de kwaliteit.</div>`;
   setSub('rating','gemiddelde IMDb-beoordeling per strengste oordeel (0–10)',null);
 
-  // Genre × gestrengheid (gestapelde balk)
-  const gk=[{k:'A',lab:'Alle leeftijden',col:'var(--A)'},{k:'f14',lab:'14 jaar',col:'var(--f14)'},{k:'f18',lab:'18 jaar',col:'var(--f18)'},{k:'X',lab:'Verboden',col:'var(--X)'}];
-  const sev=g=>(g.f14*1+g.f18*2+g.X*3)/(g.tot||1);
-  document.getElementById('genrechart').innerHTML=[...(s.genreOordeel||[])].sort((a,b)=>sev(a)-sev(b)).map(g=>{
-    const segs=gk.map(k=>{const v=g[k.k]||0; return v?`<span class="seg" data-tip="<b>${esc(g.g)} · ${k.lab}</b><br>${nl(v)} · ${pct(v,g.tot)}" style="width:${v/g.tot*100}%;background:${k.col}"></span>`:'';}).join('');
-    return `<div class="bar"><span class="lab" title="${esc(g.g)}">${esc(g.g)}</span><span class="track">${segs}</span><span class="val">${nl(g.tot)}</span></div>`;
-  }).join('');
-  document.getElementById('genre-leg').innerHTML=gk.map(k=>`<span style="cursor:default"><i style="background:${k.col}"></i>${k.lab}</span>`).join('');
-  setSub('genre','aandeel van elk oordeel per genre · van mildst (boven) naar strengst (Wikidata)');
-  bindTips();
+  // Genre — toggle oordeel / censuur (gestapelde balk)
+  function genreRow(g,parts,valDisp){
+    const seg=parts.map(pp=>pp[1]?`<span class="seg" data-tip="<b>${esc(g.g)} · ${pp[0]}</b><br>${nl(pp[1])} · ${pct(pp[1],g.tot)}" style="width:${pp[1]/g.tot*100}%;background:${pp[2]}"></span>`:'').join('');
+    return `<div class="bar"><span class="lab" title="${esc(g.g)}">${esc(g.g)}</span><span class="track">${seg}</span><span class="val">${valDisp}</span></div>`;
+  }
+  function drawGenre(mode){
+    const gs=s.genreOordeel||[];
+    const tg=`<span class="legtools"><span class="toggle" data-tg="genre"><button data-v="oordeel"${mode!=='cens'?' class="on"':''}>oordeel</button><button data-v="cens"${mode==='cens'?' class="on"':''}>censuur</button></span></span>`;
+    if(mode==='cens'){
+      const rows=[...gs].sort((a,b)=>((b.cut+b.ban)/b.tot)-((a.cut+a.ban)/a.tot));
+      document.getElementById('genrechart').innerHTML=rows.map(g=>
+        genreRow(g,[['niet geknipt',g.tot-g.cut-g.ban,'#eef1f4'],['geknipt',g.cut,'var(--f18)'],['verboden',g.ban,'var(--X)']],pct(g.cut+g.ban,g.tot))).join('');
+      document.getElementById('genre-leg').innerHTML=`<span style="cursor:default"><i style="background:var(--f18)"></i>geknipt</span><span style="cursor:default"><i style="background:var(--X)"></i>verboden</span>`+tg;
+      setSub('genre','aandeel van elk genre dat geknipt of verboden werd · strengst boven (Wikidata)');
+    } else {
+      const gk=[['A','Alle leeftijden','var(--A)'],['f14','14 jaar','var(--f14)'],['f18','18 jaar','var(--f18)'],['X','Verboden','var(--X)']];
+      const sev=g=>(g.f14+g.f18*2+g.X*3)/(g.tot||1);
+      document.getElementById('genrechart').innerHTML=[...gs].sort((a,b)=>sev(a)-sev(b)).map(g=>
+        genreRow(g,gk.map(k=>[k[1],g[k[0]]||0,k[2]]),nl(g.tot))).join('');
+      document.getElementById('genre-leg').innerHTML=gk.map(k=>`<span style="cursor:default"><i style="background:${k[2]}"></i>${k[1]}</span>`).join('')+tg;
+      setSub('genre','aandeel van elk oordeel per genre · van mildst (boven) naar strengst (Wikidata)');
+    }
+    document.querySelectorAll('#genre-leg .toggle[data-tg="genre"] button').forEach(b=>b.onclick=()=>drawGenre(b.dataset.v));
+    bindTips();
+  }
+  drawGenre('oordeel');
 
   // Herkomst over tijd
   const cs=(s.topCountries||[]).concat(['Overig']);
@@ -543,14 +551,13 @@ function buildInzichten(){
   setSub('length','mediane lengte (meter) van fictiefilms — de opkomst van de avondvullende film');
 
   renderFinds();
-  initWall();
 }
 
 /* ---------- Bijzondere vondsten ---------- */
 const CCID=id=>`https://www.cinemacontext.nl/id/${id}`;
 const FINDS=[
  {emoji:"🎭",tag:"Klassiekers voor de schaar",title:"Zelfs meesterwerken werden geweigerd",
-  body:"De commissie ontzag geen grote namen. Hustons The Maltese Falcon, Hitchcocks Rope, Buñuels Un Chien Andalou en Fellini's La Dolce Vita werden alle vier geheel verboden voor de Nederlandse bioscoop.",
+  body:"De commissie ontzag geen grote namen. Hustons <i>The Maltese Falcon</i>, Hitchcocks <i>Rope</i>, Buñuels <i>Un Chien Andalou</i> en Fellini's <i>La Dolce Vita</i> werden alle vier geheel verboden voor de Nederlandse bioscoop.",
   meta:"4 van de 796 verboden films",
   links:[["Maltezer valk",CCID('F021121')],["Rope",CCID('F015725')],["Andalusische Hond",CCID('F034706')],["Het Zoete leven",CCID('F018631')]]},
  {emoji:"↩️",tag:"Tweede kans",title:"Van verboden naar toegelaten",
@@ -561,14 +568,14 @@ const FINDS=[
   meta:"Paul Hörbiger · 136 films",
   links:[["Paul Hörbiger op IMDb","https://www.imdb.com/name/nm0405977"]]},
  {emoji:"✂️",tag:"De schaar",title:"De meest gecensureerde regisseur",
-  body:"Van Hollywood-vakman Michael Curtiz — later beroemd om Casablanca — werden achttien films geknipt of geheel verboden: elf coupures en zeven volledige verboden, bijna een kwart van zijn hier vertoonde werk.",
+  body:"Van Hollywood-vakman Michael Curtiz — later beroemd om <i>Casablanca</i> — werden achttien films geknipt of geheel verboden: elf coupures en zeven volledige verboden, bijna een kwart van zijn hier vertoonde werk.",
   meta:"Michael Curtiz · 18 films"},
  {emoji:"🎞️",tag:"Kolossen",title:"Ruim zes kilometer film",
-  body:"De langste film in de index is Gone with the Wind (1950): 6.179 meter celluloid, goed voor bijna vier uur. Alleen het afdraaien vulde al een complete bioscoopavond.",
+  body:"De langste film in de index is <i>Gone with the Wind</i> (1950): 6.179 meter celluloid, goed voor bijna vier uur. Alleen het afdraaien vulde al een complete bioscoopavond.",
   meta:"Gejaagd door de wind · 6.179 m",
   links:[["Gejaagd door de wind",CCID('F019441')]]},
  {emoji:"📰",tag:"Aan de lopende band",title:"Elke week opnieuw langs de keuring",
-  body:"Naast de speelfilms passeerde een eindeloze stroom bioscoopjournaals. Het Paramount Journaal en Polygoon's wereldnieuws werden honderden keren afzonderlijk gekeurd — de industriële routine achter de filmkeuring.",
+  body:"Naast de speelfilms passeerde een eindeloze stroom bioscoopjournaals. Het <i>Paramount Journaal</i> en <i>Polygoon's wereldnieuws</i> werden honderden keren afzonderlijk gekeurd — de industriële routine achter de filmkeuring.",
   meta:"Paramount Journaal · 734 keuringen",zoek:{q:"journaal"},zoekLabel:"Doorzoek de journaals →"},
 ];
 function _findZoek(cfg){
@@ -585,7 +592,7 @@ function renderFinds(){
   tr.innerHTML=FINDS.map(f=>{
     let links=(f.links||[]).map(l=>`<a class="ext" href="${l[1]}" target="_blank" rel="noopener">${esc(l[0])} ↗</a>`).join('');
     if(f.zoek) links+=`<a href="#" data-zoek='${esc(JSON.stringify(f.zoek))}'>${esc(f.zoekLabel||'Bekijk in de zoeker →')}</a>`;
-    return `<article class="find"><div class="femoji">${f.emoji}</div><div class="fcontent"><span class="tag">${esc(f.tag)}</span><h3>${esc(f.title)}</h3><p>${esc(f.body)}</p><div class="meta">${esc(f.meta)}</div><div class="flinks">${links}</div></div></article>`;
+    return `<article class="find"><div class="femoji">${f.emoji}</div><div class="fcontent"><span class="tag">${esc(f.tag)}</span><h3>${esc(f.title)}</h3><p>${f.body}</p><div class="meta">${esc(f.meta)}</div><div class="flinks">${links}</div></div></article>`;
   }).join('');
   const dots=document.getElementById('fdots'); dots.innerHTML=FINDS.map((_,i)=>`<i data-i="${i}"></i>`).join('');
   const dotEls=[...dots.children], step=()=>tr.clientWidth+16;
@@ -603,45 +610,7 @@ function renderFinds(){
   auto();
 }
 
-/* ---------- verboden-galerij ---------- */
-let wallShown=0; const WALL_PAGE=48; let wallQ='', wallDec=null;
-function tileHTML(b){
-  const poster=b.p?`<img loading="lazy" src="https://image.tmdb.org/t/p/w185${b.p}" alt="">`:'';
-  const href=b.ci?`https://www.cinemacontext.nl/id/${b.ci}`:b.id?`https://www.nationaalarchief.nl/onderzoeken/index/nt00402/${b.id}`:'#';
-  return `<a class="vt" href="${href}" target="_blank" rel="noopener" data-tip="<b>${esc(b.t)}</b> (${b.y||'?'})${b.f?'<br>'+esc(b.f):''}">`+
-    poster+(b.y?`<span class="yr">${b.y}</span>`:'')+`<span class="cap"><b>${esc(b.t)||'‹zonder titel›'}</b></span></a>`;
-}
-function bannedFiltered(){
-  const all=STATS.bannedList||[]; const q=wallQ?norm(wallQ):'';
-  return all.filter(b=>{
-    if(wallDec!=null&&Math.floor(+b.y/10)*10!==wallDec)return false;
-    if(q&&!norm(b.t).includes(q))return false;
-    return true;});
-}
-function drawBanned(reset){
-  if(reset){wallShown=0;document.getElementById('wall').innerHTML='';}
-  const list=bannedFiltered();
-  const slice=list.slice(wallShown,wallShown+WALL_PAGE);
-  document.getElementById('wall').insertAdjacentHTML('beforeend',slice.map(tileHTML).join('')); wallShown+=slice.length;
-  const wp=list.filter(b=>b.p).length;
-  setSub('banned',`${nl(list.length)} verboden films${wallDec!=null||wallQ?` (gefilterd)`:''} · ${nl(wp)} met bewaard affiche`);
-  const btn=document.getElementById('wallMore');
-  if(wallShown<list.length){btn.style.display='block';btn.textContent=`Toon meer (${nl(list.length-wallShown)})`;}else btn.style.display='none';
-  bindTips();
-}
-function initWall(){
-  const yrs=(STATS.bannedList||[]).map(b=>Math.floor(+b.y/10)*10).filter(d=>d>0);
-  const decs=[...new Set(yrs)].sort();
-  document.getElementById('wallDec').innerHTML=`<span class="chip ct" data-d="" aria-pressed="true">Alle</span>`+
-    decs.map(d=>`<span class="chip ct" data-d="${d}" aria-pressed="false">${d}s</span>`).join('');
-  document.getElementById('wallDec').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;
-    document.querySelectorAll('#wallDec .chip').forEach(x=>x.setAttribute('aria-pressed','false'));
-    c.setAttribute('aria-pressed','true'); wallDec=c.dataset.d===''?null:+c.dataset.d; drawBanned(true);});
-  let wd; document.getElementById('wallq').addEventListener('input',e=>{clearTimeout(wd);
-    wd=setTimeout(()=>{wallQ=e.target.value;drawBanned(true);},170);});
-  drawBanned(true);
-}
-document.getElementById('wallMore').onclick=()=>drawBanned(false);
+
 
 /* ---------- tabs ---------- */
 function openTab(name){

@@ -311,9 +311,11 @@ for e in by_tt.values():
     for g in (e["ge"] or []):
         genre_o[g][STRO[e["ostr"]]] += 1
         genre_o[g]["tot"] += 1
+        if e["banned"]:  genre_o[g]["ban"] += 1
+        elif e["cut"]:   genre_o[g]["cut"] += 1
 genres_sorted = sorted(genre_o.items(), key=lambda kv: -kv[1]["tot"])[:12]
-stats["genreOordeel"] = [{"g": g, "A": c["A"], "f14": c["14"], "f18": c["18"], "X": c["X"], "tot": c["tot"]}
-                         for g, c in genres_sorted]
+stats["genreOordeel"] = [{"g": g, "A": c["A"], "f14": c["14"], "f18": c["18"], "X": c["X"], "tot": c["tot"],
+                          "cut": c["cut"], "ban": c["ban"]} for g, c in genres_sorted]
 
 # 5) Acteurs: aanwezigheid, publieksbereik (IMDb-stemmen), censuur
 if ac:
