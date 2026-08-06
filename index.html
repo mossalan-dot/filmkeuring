@@ -184,6 +184,14 @@
   .flinks{display:flex;flex-wrap:wrap;gap:11px;font-size:12px;margin-top:1px}
   .flinks a{text-decoration:none;font-weight:600}.flinks a:hover{text-decoration:underline}
   .cuttxt{font-size:12px;color:var(--muted);font-style:italic}
+  .keurhead{font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:9px}
+  .keurlist{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+  .keur{display:flex;align-items:center;gap:8px;font-size:12px}
+  .keur .kdat{color:var(--muted);font-variant-numeric:tabular-nums;flex:none;white-space:nowrap}
+  .keur .ktitle{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:italic;opacity:.85;color:var(--muted)}
+  .keur .kflag{margin-left:3px}
+  .dossierbtn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;font-size:12px;padding:5px 11px;border-radius:8px;white-space:nowrap;flex:none}
+  .dossierbtn:hover{background:var(--accent-dark)}
   /* tooltip */
   #viztip{position:fixed;z-index:9999;background:#1f2937;color:#fff;padding:7px 10px;border-radius:8px;
     font-size:12.5px;line-height:1.45;box-shadow:0 4px 14px rgba(0,0,0,.28);pointer-events:none;opacity:0;transition:opacity .12s;max-width:260px}
@@ -623,7 +631,7 @@ document.querySelectorAll('.tabbar button').forEach(b=>b.onclick=()=>openTab(b.d
 
 /* ---------- zoeken ---------- */
 const state={q:'',yearFrom:null,yearTo:null,oordeel:new Set(),cat:new Set(),cut:false,re:false,poster:false,sort:'d'};
-let filtered=[],shown=0; const PAGE=48;
+let filtered=[],shown=0,GROUPS=null; const PAGE=48;
 function setupYear(){
   const ys=STATS.years, YMIN=ys[0], YMAX=ys[ys.length-1];
   const mn=document.getElementById('yrMin'), mx=document.getElementById('yrMax');
@@ -640,22 +648,38 @@ function ensureFilms(cb){ if(FILMS){cb();return;}
   document.getElementById('count').textContent='Films laden…';
   fetch('films.json?v=5').then(r=>r.json()).then(d=>{FILMS=d.films;cb();}); }
 function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
+const ORDN={A:0,'14':1,'18':2,X:3};
+function buildGroups(){
+  const m=new Map(), singles=[];
+  FILMS.forEach(f=>{ if(f.ci){let g=m.get(f.ci); if(!g){g={ci:f.ci,recs:[]};m.set(f.ci,g);} g.recs.push(f);} else singles.push({ci:null,recs:[f]}); });
+  GROUPS=[...m.values(),...singles];
+  GROUPS.forEach(g=>{
+    g.recs.sort((a,b)=>(a.d||'').localeCompare(b.d||''));
+    g.p=[...g.recs].sort((a,b)=>((a.t.includes('(')?1:0)-(b.t.includes('(')?1:0))||(a.t.length-b.t.length))[0];
+    g.last=g.recs[g.recs.length-1].d||'';
+    g.strict=g.recs.reduce((mx,r)=>Math.max(mx,ORDN[r.o]??0),0);
+  });
+}
+function recMatch(f){
+  if(state.yearFrom){const y=+((f.d||'0').slice(0,4)); if(y<state.yearFrom||y>state.yearTo)return false;}
+  if(state.oordeel.size&&!state.oordeel.has(f.o))return false;
+  if(state.cut&&!f.k)return false;
+  if(state.re&&!f.ho)return false;
+  if(state.cat.size&&!state.cat.has(f.c))return false;
+  return true;
+}
 function applyFilters(){ ensureFilms(()=>{
+  if(!GROUPS)buildGroups();
   const q=norm(state.q);
-  filtered=FILMS.filter(f=>{
-    if(state.yearFrom){const y=+((f.d||'0').slice(0,4)); if(y<state.yearFrom||y>state.yearTo)return false;}
-    if(state.oordeel.size&&!state.oordeel.has(f.o))return false;
-    if(state.cut&&!f.k)return false;
-    if(state.re&&!f.ho)return false;
-    if(state.cat.size&&!state.cat.has(f.c))return false;
-    if(state.poster&&!f.p)return false;
-    if(q){if(!(norm(f.t)+' '+norm((f.alt||[]).join(' '))+' '+norm(f.a)+' '+norm(f.f)+' '+norm((f.cast||[]).join(' '))+' '+norm((f.di||[]).join(' '))).includes(q))return false;}
+  filtered=GROUPS.filter(g=>{
+    if(!g.recs.some(recMatch))return false;
+    if(q){const hay=norm(g.p.t)+' '+g.recs.map(r=>norm(r.t)).join(' ')+' '+norm((g.p.alt||[]).join(' '))+' '+norm(g.p.a)+' '+norm(g.p.f)+' '+norm((g.p.cast||[]).join(' '))+' '+norm((g.p.di||[]).join(' ')); if(!hay.includes(q))return false;}
     return true;
   });
-  const cmp={d:(a,b)=>(b.d||'').localeCompare(a.d||''),da:(a,b)=>(a.d||'').localeCompare(b.d||''),
-    t:(a,b)=>a.t.localeCompare(b.t,'nl'),m:(a,b)=>(b.m||0)-(a.m||0),r:(a,b)=>(b.ir||0)-(a.ir||0)}[state.sort];
+  const cmp={d:(a,b)=>b.last.localeCompare(a.last),da:(a,b)=>(a.recs[0].d||'').localeCompare(b.recs[0].d||''),
+    t:(a,b)=>a.p.t.localeCompare(b.p.t,'nl'),m:(a,b)=>(b.p.m||0)-(a.p.m||0),r:(a,b)=>(b.p.ir||0)-(a.p.ir||0)}[state.sort];
   filtered.sort(cmp); shown=0; document.getElementById('cards').innerHTML='';
-  document.getElementById('count').innerHTML=`<b>${nl(filtered.length)}</b> rapporten gevonden`;
+  document.getElementById('count').innerHTML=`<b>${nl(filtered.length)}</b> film${filtered.length===1?'':'s'} gevonden`;
   renderMore();
 });}
 function renderMore(){
@@ -664,12 +688,11 @@ function renderMore(){
   const b=document.getElementById('more');
   if(shown<filtered.length){b.style.display='block';b.textContent=`Toon meer (${nl(filtered.length-shown)} resterend)`;}else b.style.display='none';
 }
-function fcard(f){
-  const cls=OCLS[f.o]||'q', yr=(f.d||'').slice(0,4);
-  const badges=[`<span class="fb ${cls}">${OL[f.o]||'?'}</span>`];
+function fcard(g){
+  const f=g.p, yr=(f.d||'').slice(0,4);
+  const cls={0:'A',1:'f14',2:'f18',3:'X'}[g.strict]||'q';
+  const badges=[];
   if(f.c===1)badges.push('<span class="fb q">fictie</span>'); else if(f.c===0)badges.push('<span class="fb q">non-fictie</span>');
-  if(f.k)badges.push('<span class="fb cut">✂ geknipt</span>');
-  if(f.ho)badges.push(`<span class="fb re">↻ herkeurd → ${OL[f.ho]||'?'}</span>`);
   if(f.ir){const v=f.iv?(f.iv>=1000?(f.iv/1000).toFixed(0)+'k':f.iv):''; const pv=Math.round(f.ir*10);
     badges.push(`<span class="fb star" title="IMDb-gebruikersscore ${f.ir.toFixed(1)} van 10 (${pv}%)${f.iv?`, op basis van ${nl(f.iv)} stemmen`:''}">★ ${f.ir.toFixed(1)} · ${pv}%${v?` (${v})`:''}</span>`);}
   const meta=[f.f,f.a].filter(Boolean).join(' · ');
@@ -679,17 +702,25 @@ function fcard(f){
   if(f.tt)links.push(`<a href="https://www.imdb.com/title/${f.tt}" target="_blank" rel="noopener">IMDb ↗</a>`);
   if(f.w)links.push(`<a href="${esc(f.w)}" target="_blank" rel="noopener">Wikipedia ↗</a>`);
   if(f.ci)links.push(`<a href="https://www.cinemacontext.nl/id/${f.ci}" target="_blank" rel="noopener">Cinema Context ↗</a>`);
-  if(f.id)links.push(`<a href="https://www.nationaalarchief.nl/onderzoeken/index/nt00402/${f.id}" target="_blank" rel="noopener">Dossier ↗</a>`);
-  const cut=f.k&&/[a-zA-Z]{3}/.test(f.k)&&!/^\s*\d/.test(f.k)?`<div class="cuttxt">“${esc(f.k)}”</div>`:'';
   const poster=f.p?`<img class="poster" loading="lazy" src="https://image.tmdb.org/t/p/w154${f.p}" alt="">`:'';
-  return `<div class="fcard o-${cls} ${f.o==='X'?'banned':''}"><div class="accent"></div>${poster}<div class="body">`+
+  const keur=g.recs.map(r=>{
+    const oc=OCLS[r.o]||'q', ol=OL[r.o]||'?', dat=(r.d||'').slice(0,10);
+    const flags=(r.k?'<span class="kflag" title="coupures">✂</span>':'')+(r.ho?`<span class="kflag" title="herkeurd → ${OL[r.ho]||'?'}">↻</span>`:'');
+    const subt=(r.t!==f.t)?`<span class="ktitle">${esc(r.t)}</span>`:'';
+    const doss=r.id?`https://www.nationaalarchief.nl/onderzoeken/index/nt00402/${r.id}`:null;
+    return `<div class="keur"><span class="fb ${oc}">${ol}</span><span class="kdat">${dat}${flags}</span>${subt}${doss?`<a class="dossierbtn" href="${doss}" target="_blank" rel="noopener">📄 Dossier</a>`:''}</div>`;
+  }).join('');
+  const keurHead=g.recs.length>1?`<div class="keurhead">${g.recs.length} keuringen</div>`:'<div class="keurhead">Keuring</div>';
+  return `<div class="fcard o-${cls} ${g.strict===3?'banned':''}"><div class="accent"></div>${poster}<div class="body">`+
     `<h3>${esc(f.t)||'‹zonder titel›'}</h3>`+
     (f.alt&&f.alt.length?`<div class="m alt">ook bekend als: ${esc(f.alt.join(' · '))}</div>`:'')+
     `<div class="m">${yr||'?'}${f.m?` · ${nl(f.m)} m`:''}${meta?` · ${esc(meta)}`:''}</div>`+
     (credit.length?`<div class="m credit">${credit.join(' · ')}</div>`:'')+
     (cg?`<div class="m">${esc(cg)}</div>`:'')+
-    `<div class="fbadges">${badges.join('')}</div>${cut}`+
-    (links.length?`<div class="flinks">${links.join('')}</div>`:'')+`</div></div>`;
+    (badges.length?`<div class="fbadges">${badges.join('')}</div>`:'')+
+    (links.length?`<div class="flinks">${links.join('')}</div>`:'')+
+    keurHead+`<div class="keurlist">${keur}</div>`+
+    `</div></div>`;
 }
 let deb;
 document.getElementById('q').addEventListener('input',e=>{clearTimeout(deb);deb=setTimeout(()=>{state.q=e.target.value;applyFilters();},170);});
