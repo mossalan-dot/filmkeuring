@@ -291,6 +291,42 @@ country_by_year = [dict({"y": y}, **{c: cby[y].get(c, 0) for c in top_countries 
 stats["topCountries"] = top_countries
 stats["countryByYear"] = country_by_year
 
+# 2b) Productieland per decennium (ISO3) voor de choropleth-kaart
+NL2ISO = {
+    "Verenigde Staten":"USA","Duitsland":"DEU","Duitse Rijk":"DEU","nazi-Duitsland":"DEU",
+    "Weimarrepubliek":"DEU","Duitse Democratische Republiek":"DEU","Bondsrepubliek Duitsland":"DEU",
+    "Duitse Keizerrijk":"DEU","Frankrijk":"FRA","Verenigd Koninkrijk":"GBR","Italië":"ITA",
+    "Koninkrijk Italië":"ITA","Oostenrijk":"AUT","Sovjet-Unie":"RUS",
+    "Georgische Socialistische Sovjetrepubliek":"RUS","Denemarken":"DNK","Zweden":"SWE",
+    "Nederland":"NLD","Mexico":"MEX","Tsjecho-Slowakije":"CZE","Protectoraat Bohemen en Moravië":"CZE",
+    "Eerste Tsjecho-Slowaakse Republiek":"CZE","Polen":"POL","België":"BEL","Australië":"AUS",
+    "Spanje":"ESP","Hongarije":"HUN","Zwitserland":"CHE","Japan":"JPN","Argentinië":"ARG",
+    "Noorwegen":"NOR","Brits-Indië":"IND","India":"IND","Brazilië":"BRA","Griekenland":"GRC",
+    "Finland":"FIN","Ierland":"IRL","Joegoslavië":"SRB","Socialistische Federale Republiek Joegoslavië":"SRB",
+    "Nederlands-Indië":"IDN","Zuid-Afrika":"ZAF","Canada":"CAN","Estland":"EST",
+    "Mandaatgebied Palestina":"ISR","Israël":"ISR","Filipijnen":"PHL","Roemenië":"ROU",
+    "Albanië":"ALB","Volksrepubliek China":"CHN",
+}
+ISONAME = {"USA":"Verenigde Staten","DEU":"Duitsland","FRA":"Frankrijk","GBR":"Verenigd Koninkrijk",
+    "ITA":"Italië","AUT":"Oostenrijk","RUS":"Sovjet-Unie / Rusland","DNK":"Denemarken","SWE":"Zweden",
+    "NLD":"Nederland","MEX":"Mexico","CZE":"Tsjecho-Slowakije","POL":"Polen","BEL":"België","AUS":"Australië",
+    "ESP":"Spanje","HUN":"Hongarije","CHE":"Zwitserland","JPN":"Japan","ARG":"Argentinië","NOR":"Noorwegen",
+    "IND":"India","BRA":"Brazilië","GRC":"Griekenland","FIN":"Finland","IRL":"Ierland","SRB":"Joegoslavië",
+    "IDN":"Nederlands-Indië","ZAF":"Zuid-Afrika","CAN":"Canada","EST":"Estland","ISR":"Palestina / Israël",
+    "PHL":"Filipijnen","ROU":"Roemenië","ALB":"Albanië","CHN":"China"}
+cmap = {}
+for e in by_tt.values():
+    if not e["co"] or e["year"] is None:
+        continue
+    iso = NL2ISO.get(e["co"][0])
+    if not iso:
+        continue
+    dec = (e["year"] // 10) * 10
+    c = cmap.setdefault(iso, {"n": ISONAME.get(iso, iso), "tot": 0, "dec": {}})
+    c["tot"] += 1
+    c["dec"][dec] = c["dec"].get(dec, 0) + 1
+stats["countryMap"] = cmap
+
 # 3) Regisseurs: films + geknipt/verboden
 dir_stat = defaultdict(lambda: {"films": 0, "banned": 0, "cut": 0})
 for e in by_tt.values():

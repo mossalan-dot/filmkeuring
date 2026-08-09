@@ -192,6 +192,14 @@
   .keur .kflag{margin-left:3px}
   .dossierbtn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;font-size:12px;padding:5px 11px;border-radius:8px;white-space:nowrap;flex:none}
   .dossierbtn:hover{background:var(--accent-dark)}
+  /* choropleth-kaart */
+  .mapwrap{position:relative;width:100%}
+  #mapsvg{width:100%;height:auto;display:block;background:#f8fafb;border-radius:10px}
+  #mapsvg path{stroke:#fff;stroke-width:.4;stroke-linejoin:round;transition:fill .2s}
+  #mapsvg path[data-c]:hover{stroke:var(--ink);stroke-width:.9;cursor:default}
+  .maplegend{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px;font-size:12px;color:var(--muted)}
+  .maplegend .sw{display:inline-flex;align-items:center;gap:5px}
+  .maplegend i{width:22px;height:11px;border-radius:2px;display:inline-block;border:1px solid rgba(0,0,0,.05)}
   /* tooltip */
   #viztip{position:fixed;z-index:9999;background:#1f2937;color:#fff;padding:7px 10px;border-radius:8px;
     font-size:12.5px;line-height:1.45;box-shadow:0 4px 14px rgba(0,0,0,.28);pointer-events:none;opacity:0;transition:opacity .12s;max-width:260px}
@@ -266,6 +274,13 @@
         <h2 id="h-origin">Herkomst van de film over tijd</h2><div class="sub" id="s-origin"></div>
         <div class="yearchart" id="originchart"></div>
         <div class="legend" id="origin-leg"></div>
+      </div>
+
+      <div class="card w12">
+        <h2 id="h-map">Waar de films vandaan kwamen</h2><div class="sub" id="s-map"></div>
+        <div class="legend" id="map-tg" style="margin-bottom:6px"></div>
+        <div class="mapwrap"><svg id="mapsvg" role="img" aria-label="Productieland naar decennium"></svg></div>
+        <div class="maplegend" id="map-leg"></div>
       </div>
 
       <div class="card w6">
@@ -459,7 +474,7 @@ function yearchart(elId,legId,data,keys,opt){
 }
 
 /* ---------- laden ---------- */
-fetch('stats.json?v=5').then(r=>r.json()).then(d=>{STATS=d.stats; buildInzichten(); setupYear();});
+fetch('stats.json?v=6').then(r=>r.json()).then(d=>{STATS=d.stats; buildInzichten(); setupYear();});
 
 function buildInzichten(){
   const s=STATS;
@@ -558,7 +573,46 @@ function buildInzichten(){
   yearchart('lengthchart','',ld,[{k:'med',lab:'mediane lengte',col:'var(--accent)'}],{everyLabel:5,unit:'m'});
   setSub('length','mediane lengte (meter) van fictiefilms — de opkomst van de avondvullende film');
 
+  loadMap();
   renderFinds();
+}
+
+/* ---------- productieland-choropleth ---------- */
+let WORLD=null, MAP_DEC='all';
+const MBB={lon0:-130,lon1:45,lat0:25,lat1:72};
+const MW=1000, MH=Math.round(MW*(MBB.lat1-MBB.lat0)/(MBB.lon1-MBB.lon0)/Math.cos(48*Math.PI/180));
+const MAPBINS=[[9,'1–9'],[49,'10–49'],[199,'50–199'],[999,'200–999'],[1e9,'1.000+']];
+const MAPCOL=['#cfe8f0','#93cbe0','#4a9dbf','#2c7da0','#013a63'];
+function heatColor(v){ if(!v)return '#eef1f4'; for(let i=0;i<MAPBINS.length;i++) if(v<=MAPBINS[i][0]) return MAPCOL[i]; return MAPCOL[4]; }
+function _mproj(pt){ const x=(pt[0]-MBB.lon0)/(MBB.lon1-MBB.lon0)*MW, y=(MBB.lat1-pt[1])/(MBB.lat1-MBB.lat0)*MH; return x.toFixed(1)+','+y.toFixed(1); }
+function _mring(r){ return 'M'+r.map(_mproj).join('L')+'Z'; }
+function _mpath(g){ let d=''; if(g.type==='Polygon')g.coordinates.forEach(r=>d+=_mring(r)); else if(g.type==='MultiPolygon')g.coordinates.forEach(pp=>pp.forEach(r=>d+=_mring(r))); return d; }
+function loadMap(){ if(WORLD){setupMap();return;} fetch('world.json').then(r=>r.json()).then(w=>{WORLD=w;setupMap();}).catch(()=>{document.getElementById('h-map').closest('.card').style.display='none';}); }
+function setupMap(){
+  const svg=document.getElementById('mapsvg'); svg.setAttribute('viewBox',`0 0 ${MW} ${MH}`);
+  svg.innerHTML=WORLD.features.map(f=>{const d=_mpath(f.g); return d?`<path data-iso="${f.id}" d="${d}"></path>`:'';}).join('');
+  const cm=STATS.countryMap;
+  const decs=[...new Set(Object.values(cm).flatMap(c=>Object.keys(c.dec).map(Number)))].sort((a,b)=>a-b);
+  document.getElementById('map-tg').innerHTML=`<span class="legtools"><span class="toggle" data-tg="mapdec"><button data-v="all" class="on">Alle jaren</button>`+
+    decs.map(dd=>`<button data-v="${dd}">${dd}s</button>`).join('')+`</span></span>`;
+  document.querySelectorAll('#map-tg .toggle button').forEach(b=>b.onclick=()=>{MAP_DEC=b.dataset.v;
+    b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); fillMap();});
+  document.getElementById('map-leg').innerHTML='<span class="sw"><i style="background:#eef1f4"></i>geen</span>'+
+    MAPBINS.map((b,i)=>`<span class="sw"><i style="background:${MAPCOL[i]}"></i>${b[1]}</span>`).join('')+
+    '<span style="opacity:.85">o.a. Japan, Australië en Argentinië vallen buiten beeld</span>';
+  setSub('map','geografische herkomst van de fictiefilms · donkerder = meer films · historische staten samengevoegd tot moderne landen',STATS.coverage.country);
+  fillMap();
+}
+function fillMap(){
+  const cm=STATS.countryMap;
+  document.querySelectorAll('#mapsvg path').forEach(pth=>{
+    const c=cm[pth.dataset.iso];
+    const v=c?(MAP_DEC==='all'?c.tot:(c.dec[MAP_DEC]||0)):0;
+    pth.setAttribute('fill',heatColor(v));
+    if(v){pth.setAttribute('data-c','1');pth.setAttribute('data-tip',`<b>${esc(c.n)}</b><br>${nl(v)} films${MAP_DEC==='all'?'':' · jaren '+MAP_DEC}`);}
+    else{pth.removeAttribute('data-c');pth.removeAttribute('data-tip');}
+  });
+  bindTips();
 }
 
 /* ---------- Bijzondere vondsten ---------- */
