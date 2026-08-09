@@ -182,7 +182,10 @@
   .chk input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;margin:0}
   .count{color:var(--muted);font-size:13px;margin:2px 2px 12px}.count b{color:var(--ink)}
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
-  .fcard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 14px;display:flex;gap:12px;position:relative;overflow:hidden}
+  .fcard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 14px;display:flex;flex-direction:column;gap:11px;position:relative;overflow:hidden}
+  .frow{display:flex;gap:12px}
+  .dossbar{display:block;background:var(--accent);color:#fff;text-align:center;padding:9px;border-radius:8px;font-weight:700;font-size:13px;text-decoration:none}
+  .dossbar:hover{background:var(--accent-dark)}
   .fcard.banned{border-color:#e6a9a2}
   .fcard .accent{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--q)}
   .fcard.o-A .accent{background:var(--A)}.fcard.o-14 .accent{background:var(--f14)}.fcard.o-18 .accent{background:var(--f18)}.fcard.o-X .accent{background:var(--X)}
@@ -205,7 +208,8 @@
   .keurlist{display:flex;flex-direction:column;gap:5px;margin-top:6px}
   .keur{display:flex;align-items:center;gap:8px;font-size:12px}
   .keur .kdat{color:var(--muted);font-variant-numeric:tabular-nums;flex:none;white-space:nowrap}
-  .keur .ktitle{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:italic;opacity:.85;color:var(--muted)}
+  .keur .kast{color:var(--accent);font-weight:800;cursor:help;margin-left:4px}
+  .keurnote{font-size:11px;color:var(--muted);margin-top:5px;font-style:italic}
   .keur .kflag{margin-left:3px}
   .dossierbtn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;font-size:12px;padding:5px 11px;border-radius:8px;white-space:nowrap;flex:none}
   .dossierbtn:hover{background:var(--accent-dark)}
@@ -487,6 +491,16 @@ function yearchart(elId,legId,data,keys,opt){
   draw();
 }
 
+function drawDonut(id,entries,total){
+  const R=62,r=40,cx=76,cy=76; let a0=-Math.PI/2,g='';
+  entries.forEach(([lab,v,col])=>{if(!v)return;const a1=a0+v/total*2*Math.PI,lg=(a1-a0)>Math.PI?1:0;
+    const P=(a,rad)=>[cx+rad*Math.cos(a),cy+rad*Math.sin(a)];const[x1,y1]=P(a0,R),[x2,y2]=P(a1,R),[x3,y3]=P(a1,r),[x4,y4]=P(a0,r);
+    g+=`<path d="M${x1} ${y1} A${R} ${R} 0 ${lg} 1 ${x2} ${y2} L${x3} ${y3} A${r} ${r} 0 ${lg} 0 ${x4} ${y4} Z" fill="${col}" data-tip="<b>${esc(lab)}</b><br>${nl(v)} · ${pct(v,total)}"></path>`; a0=a1;});
+  const rows=entries.map(([lab,v,col])=>v?`<div class="sbar" style="grid-template-columns:14px 1fr auto"><i style="width:11px;height:11px;border-radius:3px;background:${col};display:inline-block"></i><span class="nm">${esc(lab)}</span><span class="ct">${nl(v)} · ${pct(v,total)}</span></div>`:'').join('');
+  document.getElementById(id).innerHTML=`<div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap"><svg width="152" height="152" viewBox="0 0 152 152" style="flex:0 0 auto">${g}<text x="76" y="72" text-anchor="middle" style="fill:var(--ink);font-weight:800;font-size:19px">${nl(total)}</text><text x="76" y="90" text-anchor="middle" style="fill:var(--muted);font-size:10px">keuringen</text></svg><div style="flex:1 1 160px">${rows}</div></div>`;
+  bindTips();
+}
+
 /* ---------- laden ---------- */
 fetch('stats.json?v=6').then(r=>r.json()).then(d=>{STATS=d.stats; buildInzichten(); setupYear();});
 
@@ -497,7 +511,6 @@ function buildInzichten(){
     [nl(s.banned),"films verboden",`${pct(s.banned,s.total)} van het totaal`,"Oordeel “niet toegelaten” — geheel geweigerd voor vertoning.",'red'],
     [nl(s.coupures),"films met coupures",`${pct(s.coupures,s.total)} — gedeeltelijk geknipt`,"De commissie eiste dat stukken film verwijderd werden. Het rapport noteert meestal de geknipte lengte in meters, niet de reden."],
     [nl(s.herkeuringen),"films herkeurd"],
-    [nl(s.coverage.rating),"met IMDb-score",`${nl(s.coverage.poster)} met poster · ${nl(s.coverage.director)} met regie`,"Verrijkt via Cinema Context → IMDb, TMDb en Wikidata."],
   ]);
 
   // Tijdlijn
@@ -510,12 +523,13 @@ function buildInzichten(){
 
   // Oordeel
   const ov=['A','14','18','X','?'].filter(k=>s.oordeel[k]);
-  bars('oordeelchart',ov.map(k=>[OL[k],s.oordeel[k],OC[k]]),s.total);
+  drawDonut('oordeelchart',ov.map(k=>[OL[k],s.oordeel[k],OC[k]]),s.total);
   setSub('oordeel','verdeling over alle keuringen',s.total);
 
   // Studio's
   const wikiUrl=q=>`https://nl.wikipedia.org/w/index.php?search=${encodeURIComponent(q)}`;
-  bars('studiochart',s.topStudios.slice(0,12).map(x=>[x.n,x.c,'var(--accent)',null,x.l||'',wikiUrl(x.n)]),s.total);
+  const SHORTLAND={'Verenigde Staten':'VS','Verenigd Koninkrijk':'VK','Duitsland':'Dld','Frankrijk':'Fr','Nederland':'NL','Oostenrijk':'Ost','Zweden':'Zwe','Denemarken':'Den'};
+  bars('studiochart',s.topStudios.slice(0,12).map(x=>[x.n,x.c,'var(--accent)',null,SHORTLAND[x.l]||x.l||'',wikiUrl(x.n)]),s.total);
   const sc=s.studioCoverage;
   setSub('studio',`${nl(sc.distinct)} maatschappijen`,sc.withFabriek,`Bij ${pct(sc.withFabriek,sc.total)} van de rapporten vermeld; bij de rest (reclame, journaals, fragmenten) niet. Klik een naam voor Wikipedia.`);
 
@@ -529,7 +543,7 @@ function buildInzichten(){
     const tg=`<span class="legtools"><span class="toggle" data-tg="genre"><button data-v="oordeel"${mode!=='cens'?' class="on"':''}>oordeel</button><button data-v="cens"${mode==='cens'?' class="on"':''}>censuur</button></span></span>`;
     if(mode==='cens'){
       const rows=[...gs].sort((a,b)=>((b.cut+b.ban)/b.tot)-((a.cut+a.ban)/a.tot));
-      document.getElementById('genrechart').innerHTML=rows.map(g=>
+      document.getElementById('genrechart').innerHTML='<div class="note" style="text-align:right;margin:-2px 0 7px 0">rechts: aandeel geknipt of verboden →</div>'+rows.map(g=>
         genreRow(g,[['goedgekeurd',g.tot-g.cut-g.ban,'var(--A)'],['geknipt',g.cut,'var(--f18)'],['verboden',g.ban,'var(--X)']],pct(g.cut+g.ban,g.tot))).join('');
       document.getElementById('genre-leg').innerHTML=`<span style="cursor:default"><i style="background:var(--A)"></i>goedgekeurd</span><span style="cursor:default"><i style="background:var(--f18)"></i>geknipt</span><span style="cursor:default"><i style="background:var(--X)"></i>verboden</span>`+tg;
       setSub('genre','aandeel geknipt of verboden · strengst boven',null,'Genres uit Wikidata. Toggle naar ‘oordeel’ voor de leeftijdsverdeling.');
@@ -559,13 +573,13 @@ function buildInzichten(){
   setSub('actors','aantal films in dit corpus',s.coverage.cast,'Aantal films waarin de acteur voorkwam. Klik een naam voor IMDb.');
 
   // In de censuur — toggle acteurs / regisseurs (combibalk geknipt vs verboden)
-  const censSegs=x=>[[x.cut,'var(--f18)','geknipt'],[x.banned,'var(--X)','verboden']];
-  const censLeg=[['var(--f18)','geknipt'],['var(--X)','verboden']];
+  const censSegs=x=>[[x.films-x.cut-x.banned,'var(--A)','goedgekeurd'],[x.cut,'var(--f18)','geknipt'],[x.banned,'var(--X)','verboden']];
+  const censLeg=[['var(--A)','goedgekeurd'],['var(--f18)','geknipt'],['var(--X)','verboden']];
   function drawCensPeople(mode){
     const tg=`<span class="legtools"><span class="toggle" data-tg="cp"><button data-v="acteurs"${mode!=='regisseurs'?' class="on"':''}>Acteurs</button><button data-v="regisseurs"${mode==='regisseurs'?' class="on"':''}>Regisseurs</button></span></span>`;
     document.getElementById('cp-tg').innerHTML=censLeg.map(l=>`<span style="cursor:default"><i style="background:${l[0]}"></i>${l[1]}</span>`).join('')+tg;
     if(mode==='regisseurs'){
-      stackBars('cpchart',(s.censoredDirectors||[]).map(d=>[d.n,censSegs(d),nl(d.cens),`${d.pct}%`,wikiUrl(d.n)]));
+      stackBars('cpchart',(s.censoredDirectors||[]).map(d=>[d.n,censSegs(d),`${d.pct}%`,null,wikiUrl(d.n)]));
       setSub('cp','meest gecensureerde regisseurs',null,'Gestapeld geknipt vs. verboden; % = aandeel van hun getoonde oeuvre. Klik een naam voor Wikipedia.');
     } else {
       stackBars('cpchart',(s.starsCensored||[]).map(a=>[a.n,censSegs(a),`${a.pct}%`,null,imdbName(a.id)]));
@@ -771,15 +785,16 @@ function fcard(g){
   if(f.ci)links.push(`<a class="lg lg-cc" title="Cinema Context" href="https://www.cinemacontext.nl/id/${f.ci}" target="_blank" rel="noopener">🎬 CC</a>`);
   const poster=f.p?`<img class="poster" loading="lazy" src="https://image.tmdb.org/t/p/w154${f.p}" alt="">`:'<div class="poster-none">🎞️</div>';
   const dossIds=g.recs.filter(r=>r.id).map(r=>r.id);
-  const dossBtn=dossIds.length?`<a class="dossbtn" href="https://www.nationaalarchief.nl/onderzoeken/index/nt00402/${dossIds[0]}" target="_blank" rel="noopener" data-doss="${dossIds.join(',')}" title="Open het keuringsrapport bij het Nationaal Archief"><span class="di">📄</span>Dossier${dossIds.length>1?' ('+dossIds.length+')':''}</a>`:'';
+  const dossBar=dossIds.length?`<a class="dossbar" href="https://www.nationaalarchief.nl/onderzoeken/index/nt00402/${dossIds[0]}" target="_blank" rel="noopener" data-doss="${dossIds.join(',')}" title="Open het keuringsrapport bij het Nationaal Archief">📄 Dossier${dossIds.length>1?'s ('+dossIds.length+')':''}</a>`:'';
   const keur=g.recs.map(r=>{
     const oc=OCLS[r.o]||'q', ol=OL[r.o]||'?', dat=fmtDate(r.d);
     const flags=(r.k?'<span class="kflag" title="coupures">✂</span>':'')+(r.ho?`<span class="kflag" title="herkeurd → ${OL[r.ho]||'?'}">↻</span>`:'');
-    const subt=(r.t!==f.t)?`<span class="ktitle">${esc(r.t)}</span>`:'';
+    const subt=(r.t!==f.t)?`<span class="kast" title="${esc(r.t)}">*</span>`:'';
     return `<div class="keur"><span class="fb ${oc}">${ol}</span><span class="kdat">${dat}${flags}</span>${subt}</div>`;
   }).join('');
   const keurHead=g.recs.length>1?`<div class="keurhead">${g.recs.length} keuringen</div>`:'<div class="keurhead">Keuring</div>';
-  return `<div class="fcard o-${cls} ${g.strict===3?'banned':''}"><div class="accent"></div><div class="fleft">${poster}${dossBtn}</div><div class="body">`+
+  const anyAlt=g.recs.some(r=>r.t!==f.t);
+  return `<div class="fcard o-${cls} ${g.strict===3?'banned':''}"><div class="accent"></div><div class="frow"><div class="fleft">${poster}</div><div class="body">`+
     `<h3>${esc(f.t)||'‹zonder titel›'}</h3>`+
     (f.alt&&f.alt.length?`<div class="m alt">ook bekend als: ${esc(f.alt.join(' · '))}</div>`:'')+
     `<div class="m">${yr||'?'}${f.m?` · ${nl(f.m)} m`:''}${meta?` · ${esc(meta)}`:''}</div>`+
@@ -788,7 +803,8 @@ function fcard(g){
     (badges.length?`<div class="fbadges">${badges.join('')}</div>`:'')+
     (links.length?`<div class="flinks">${links.join('')}</div>`:'')+
     keurHead+`<div class="keurlist">${keur}</div>`+
-    `</div></div>`;
+    (anyAlt?`<div class="keurnote">* afwijkende titel bij die keuring — wijs de asterisk aan</div>`:'')+
+    `</div></div>`+dossBar+`</div>`;
 }
 let deb;
 document.getElementById('q').addEventListener('input',e=>{clearTimeout(deb);deb=setTimeout(()=>{state.q=e.target.value;applyFilters();},170);});
