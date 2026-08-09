@@ -158,7 +158,24 @@
   .chip.cA[aria-pressed="true"]{background:var(--A)}.chip.c14[aria-pressed="true"]{background:var(--f14);color:#3a2c05}
   .chip.c18[aria-pressed="true"]{background:var(--f18)}.chip.cX[aria-pressed="true"]{background:var(--X)}
   .chip.ct[aria-pressed="true"]{background:var(--accent)}
-  .filterbar{display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:12px;align-items:center}
+  .filterbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;align-items:center}
+  .fdrop{position:relative}
+  .fdrop-btn{font:inherit;font-size:13.5px;font-weight:600;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+  .fdrop-btn:hover{border-color:var(--accent)}
+  .fdrop.open .fdrop-btn{border-color:var(--accent);color:var(--accent)}
+  .fdrop .fcnt{background:var(--accent);color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:1px 7px;display:none}
+  .fdrop .fcnt.on{display:inline-block}
+  .fdrop-menu{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 26px rgba(0,0,0,.14);padding:10px 13px;display:none;flex-direction:column;gap:9px;z-index:60;min-width:172px}
+  .fdrop.open .fdrop-menu{display:flex}
+  .fleft{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;width:62px}
+  .poster-none{width:62px;height:93px;border-radius:8px;background:#eef1f4;display:flex;align-items:center;justify-content:center;font-size:26px}
+  .dossbtn{width:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:var(--accent);color:#fff;text-decoration:none;font-weight:700;font-size:10.5px;padding:7px 2px;border-radius:8px;line-height:1.15;text-align:center;cursor:pointer}
+  .dossbtn .di{font-size:16px}
+  .dossbtn:hover{background:var(--accent-dark)}
+  .flinks .lg{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;line-height:1.5;letter-spacing:.02em}
+  .lg-imdb{background:#f5c518;color:#1a1a00}
+  .lg-wiki{background:#eef1f4;color:#202122;font-family:Georgia,'Times New Roman',serif}
+  .lg-cc{background:#0e7490;color:#fff}
   .fgroup{display:flex;flex-wrap:wrap;gap:5px 12px;align-items:center}
   .fgroup .glabel{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-right:2px}
   .chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;user-select:none;color:var(--ink)}
@@ -321,19 +338,28 @@
       </div>
     </div>
     <div class="filterbar">
-      <div class="fgroup"><span class="glabel">Leeftijd</span>
-        <label class="chk"><input type="checkbox" data-o="A"> Alle leeftijden</label>
-        <label class="chk"><input type="checkbox" data-o="14"> 14 jaar</label>
-        <label class="chk"><input type="checkbox" data-o="18"> 18 jaar</label>
-        <label class="chk"><input type="checkbox" data-o="X"> Verboden</label>
+      <div class="fdrop">
+        <button class="fdrop-btn" type="button">Leeftijd <span class="fcnt"></span>▾</button>
+        <div class="fdrop-menu">
+          <label class="chk"><input type="checkbox" data-o="A"> Alle leeftijden</label>
+          <label class="chk"><input type="checkbox" data-o="14"> 14 jaar</label>
+          <label class="chk"><input type="checkbox" data-o="18"> 18 jaar</label>
+          <label class="chk"><input type="checkbox" data-o="X"> Verboden</label>
+        </div>
       </div>
-      <div class="fgroup"><span class="glabel">Soort</span>
-        <label class="chk"><input type="checkbox" data-c="1"> Fictie</label>
-        <label class="chk"><input type="checkbox" data-c="0"> Non-fictie</label>
+      <div class="fdrop">
+        <button class="fdrop-btn" type="button">Soort <span class="fcnt"></span>▾</button>
+        <div class="fdrop-menu">
+          <label class="chk"><input type="checkbox" data-c="1"> Fictie</label>
+          <label class="chk"><input type="checkbox" data-c="0"> Non-fictie</label>
+        </div>
       </div>
-      <div class="fgroup"><span class="glabel">Overig</span>
-        <label class="chk"><input type="checkbox" data-x="cut"> ✂ Geknipt</label>
-        <label class="chk"><input type="checkbox" data-x="re"> ↻ Herkeurd</label>
+      <div class="fdrop">
+        <button class="fdrop-btn" type="button">Censuur <span class="fcnt"></span>▾</button>
+        <div class="fdrop-menu">
+          <label class="chk"><input type="checkbox" data-x="cut"> ✂ Geknipt</label>
+          <label class="chk"><input type="checkbox" data-x="re"> ↻ Herkeurd</label>
+        </div>
       </div>
     </div>
     <div class="count" id="count">Laden…</div>
@@ -635,7 +661,7 @@ function _findZoek(cfg){
   (cfg.oordeel||[]).forEach(o=>{state.oordeel.add(o);const el=document.querySelector(`.filterbar input[data-o="${o}"]`);if(el)el.checked=true;});
   if(cfg.re){state.re=true;const el=document.querySelector('.filterbar input[data-x="re"]');if(el)el.checked=true;}
   if(cfg.q!=null){state.q=cfg.q;document.getElementById('q').value=cfg.q;}
-  applyFilters();
+  updFilterCounts(); applyFilters();
 }
 function renderFinds(){
   const tr=document.getElementById('finds');
@@ -741,19 +767,20 @@ function fcard(g){
   const credit=[]; if(f.di&&f.di.length)credit.push('🎬 '+esc(f.di.slice(0,2).join(', '))); if(f.cast&&f.cast.length)credit.push('met '+esc(f.cast.join(', ')));
   const cg=[f.co&&f.co[0],f.ge&&f.ge.slice(0,2).join(', ')].filter(Boolean).join(' · ');
   const links=[];
-  if(f.tt)links.push(`<a href="https://www.imdb.com/title/${f.tt}" target="_blank" rel="noopener">IMDb ↗</a>`);
-  if(f.w)links.push(`<a href="${esc(f.w)}" target="_blank" rel="noopener">Wikipedia ↗</a>`);
-  if(f.ci)links.push(`<a href="https://www.cinemacontext.nl/id/${f.ci}" target="_blank" rel="noopener">Cinema Context ↗</a>`);
-  const poster=f.p?`<img class="poster" loading="lazy" src="https://image.tmdb.org/t/p/w154${f.p}" alt="">`:'';
+  if(f.tt)links.push(`<a class="lg lg-imdb" title="IMDb" href="https://www.imdb.com/title/${f.tt}" target="_blank" rel="noopener">IMDb</a>`);
+  if(f.w)links.push(`<a class="lg lg-wiki" title="Wikipedia" href="${esc(f.w)}" target="_blank" rel="noopener">W</a>`);
+  if(f.ci)links.push(`<a class="lg lg-cc" title="Cinema Context" href="https://www.cinemacontext.nl/id/${f.ci}" target="_blank" rel="noopener">🎬 CC</a>`);
+  const poster=f.p?`<img class="poster" loading="lazy" src="https://image.tmdb.org/t/p/w154${f.p}" alt="">`:'<div class="poster-none">🎞️</div>';
+  const dossIds=g.recs.filter(r=>r.id).map(r=>r.id);
+  const dossBtn=dossIds.length?`<a class="dossbtn" href="https://www.nationaalarchief.nl/onderzoeken/index/nt00402/${dossIds[0]}" target="_blank" rel="noopener" data-doss="${dossIds.join(',')}" title="Open het keuringsrapport bij het Nationaal Archief"><span class="di">📄</span>Dossier${dossIds.length>1?' ('+dossIds.length+')':''}</a>`:'';
   const keur=g.recs.map(r=>{
     const oc=OCLS[r.o]||'q', ol=OL[r.o]||'?', dat=fmtDate(r.d);
     const flags=(r.k?'<span class="kflag" title="coupures">✂</span>':'')+(r.ho?`<span class="kflag" title="herkeurd → ${OL[r.ho]||'?'}">↻</span>`:'');
     const subt=(r.t!==f.t)?`<span class="ktitle">${esc(r.t)}</span>`:'';
-    const doss=r.id?`https://www.nationaalarchief.nl/onderzoeken/index/nt00402/${r.id}`:null;
-    return `<div class="keur"><span class="fb ${oc}">${ol}</span><span class="kdat">${dat}${flags}</span>${subt}${doss?`<a class="dossierbtn" href="${doss}" target="_blank" rel="noopener">📄 Dossier</a>`:''}</div>`;
+    return `<div class="keur"><span class="fb ${oc}">${ol}</span><span class="kdat">${dat}${flags}</span>${subt}</div>`;
   }).join('');
   const keurHead=g.recs.length>1?`<div class="keurhead">${g.recs.length} keuringen</div>`:'<div class="keurhead">Keuring</div>';
-  return `<div class="fcard o-${cls} ${g.strict===3?'banned':''}"><div class="accent"></div>${poster}<div class="body">`+
+  return `<div class="fcard o-${cls} ${g.strict===3?'banned':''}"><div class="accent"></div><div class="fleft">${poster}${dossBtn}</div><div class="body">`+
     `<h3>${esc(f.t)||'‹zonder titel›'}</h3>`+
     (f.alt&&f.alt.length?`<div class="m alt">ook bekend als: ${esc(f.alt.join(' · '))}</div>`:'')+
     `<div class="m">${yr||'?'}${f.m?` · ${nl(f.m)} m`:''}${meta?` · ${esc(meta)}`:''}</div>`+
@@ -767,11 +794,16 @@ function fcard(g){
 let deb;
 document.getElementById('q').addEventListener('input',e=>{clearTimeout(deb);deb=setTimeout(()=>{state.q=e.target.value;applyFilters();},170);});
 document.getElementById('sort').addEventListener('change',e=>{state.sort=e.target.value;applyFilters();});
+function updFilterCounts(){document.querySelectorAll('.fdrop').forEach(d=>{const n=d.querySelectorAll('input:checked').length;const c=d.querySelector('.fcnt');c.textContent=n;c.classList.toggle('on',n>0);});}
+document.querySelectorAll('.fdrop-btn').forEach(b=>b.onclick=e=>{e.stopPropagation();const d=b.parentNode,was=d.classList.contains('open');document.querySelectorAll('.fdrop').forEach(x=>x.classList.remove('open'));if(!was)d.classList.add('open');});
+document.querySelectorAll('.fdrop-menu').forEach(m=>m.onclick=e=>e.stopPropagation());
+document.addEventListener('click',()=>document.querySelectorAll('.fdrop').forEach(x=>x.classList.remove('open')));
+document.getElementById('cards').addEventListener('click',e=>{const a=e.target.closest('a[data-doss]');if(!a)return;const ids=a.dataset.doss.split(',');if(ids.length<=1)return;e.preventDefault();ids.forEach(id=>window.open('https://www.nationaalarchief.nl/onderzoeken/index/nt00402/'+id,'_blank','noopener'));});
 document.querySelector('.filterbar').addEventListener('change',e=>{const t=e.target;if(t.tagName!=='INPUT')return;
   if('o' in t.dataset){t.checked?state.oordeel.add(t.dataset.o):state.oordeel.delete(t.dataset.o);}
   else if('c' in t.dataset){const c=+t.dataset.c;t.checked?state.cat.add(c):state.cat.delete(c);}
   else if('x' in t.dataset){state[t.dataset.x]=t.checked;}
-  applyFilters();});
+  updFilterCounts(); applyFilters();});
 document.getElementById('more').onclick=renderMore;
 </script>
 <script>window.goatcounter={path:function(p){return location.host+p}}</script>
