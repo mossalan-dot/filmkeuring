@@ -17,6 +17,7 @@
   body{margin:0;background:var(--bg);color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.4}
   a{color:var(--accent)}
+  input,select,textarea,button,optgroup,option{font-family:inherit}
   /* header */
   header{padding:22px 24px 4px}
   header .wrap{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:14px}
@@ -157,7 +158,9 @@
   .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
   .search{flex:1 1 240px;min-width:200px;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 13px}
   .search input{border:0;background:transparent;color:var(--ink);font-size:15px;width:100%;outline:none}
-  select{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:9px 11px;font-size:14px;font-weight:500}
+  select{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:9px 11px;font-size:14px;font-weight:500;font-family:inherit}
+  .pname{color:inherit;text-decoration:none;cursor:pointer;border-bottom:1px dotted #c3ccd1}
+  .pname:hover{color:var(--accent);border-color:var(--accent)}
   .yearslider{position:relative;flex:1 1 230px;min-width:200px;height:42px;padding:0 8px}
   .yearslider .yrlab{position:absolute;top:0;left:0;right:0;text-align:center;font-size:12px;color:var(--muted);font-weight:600}
   .ytrack{position:absolute;left:8px;right:8px;top:27px;height:4px;background:#e5e7eb;border-radius:3px}
@@ -226,6 +229,11 @@
   .keur .kdat{color:var(--muted);font-variant-numeric:tabular-nums;flex:none;white-space:nowrap}
   .keur .kast{color:var(--accent);font-weight:800;cursor:help;margin-left:4px}
   .keurnote{font-size:11px;color:var(--muted);margin-top:5px;font-style:italic}
+  .keurpager{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px;color:var(--muted)}
+  .keurpager .knav{width:24px;height:24px;border:1px solid var(--line);background:#fff;border-radius:7px;cursor:pointer;color:var(--ink);font-size:14px;display:flex;align-items:center;justify-content:center;padding:0}
+  .keurpager .knav:disabled{opacity:.4;cursor:default}
+  .keurpager .knav:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
+  .keurpager .kpg{font-variant-numeric:tabular-nums}
   .keur .kflag{margin-left:3px}
   .dossierbtn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;font-size:12px;padding:5px 11px;border-radius:8px;white-space:nowrap;flex:none}
   .dossierbtn:hover{background:var(--accent-dark)}
@@ -844,6 +852,14 @@ function renderMore(){
   const b=document.getElementById('more');
   if(shown<filtered.length){b.style.display='block';b.textContent=`Toon meer (${nl(filtered.length-shown)} resterend)`;}else b.style.display='none';
 }
+const KMAX=6; window._KR={};
+function keurRowHTML(r,ft){
+  const oc=OCLS[r.o]||'q', ol=OL[r.o]||'?', dat=fmtDate(r.d);
+  const flags=(r.k?'<span class="kflag" title="coupures">✂</span>':'')+(r.ho?`<span class="kflag" title="herkeurd → ${OL[r.ho]||'?'}">↻</span>`:'');
+  const subt=(r.t!==ft)?`<span class="kast" data-tip="titel bij deze keuring:<br><b>${esc(r.t)}</b>">*</span>`:'';
+  return `<div class="keur"><span class="fb ${oc}">${ol}</span><span class="kdat">${dat}${flags}</span>${subt}</div>`;
+}
+function keurPage(recs,ft,page){return recs.slice(page*KMAX,(page+1)*KMAX).map(r=>keurRowHTML(r,ft)).join('');}
 function fcard(g){
   const f=g.p, yr=(f.d||'').slice(0,4);
   const cls={0:'A',1:'f14',2:'f18',3:'X'}[g.strict]||'q';
@@ -852,7 +868,8 @@ function fcard(g){
   if(f.ir){const v=f.iv?(f.iv>=1000?(f.iv/1000).toFixed(0)+'k':f.iv):''; const pv=Math.round(f.ir*10);
     badges.push(`<span class="fb star" title="IMDb-gebruikersscore ${f.ir.toFixed(1)} van 10 (${pv}%)${f.iv?`, op basis van ${nl(f.iv)} stemmen`:''}">★ ${f.ir.toFixed(1)} · ${pv}%${v?` (${v})`:''}</span>`);}
   const meta=[f.f,f.a].filter(Boolean).join(' · ');
-  const credit=[]; if(f.di&&f.di.length)credit.push('🎬 '+esc(f.di.slice(0,2).join(', '))); if(f.cast&&f.cast.length)credit.push('met '+esc(f.cast.join(', ')));
+  const pn=n=>`<a class="pname" data-q="${esc(n)}" title="Zoek op ${esc(n)}">${esc(n)}</a>`;
+  const credit=[]; if(f.di&&f.di.length)credit.push('🎬 '+f.di.slice(0,2).map(pn).join(', ')); if(f.cast&&f.cast.length)credit.push('met '+f.cast.map(pn).join(', '));
   const cg=[f.co&&f.co[0],f.ge&&f.ge.slice(0,2).join(', ')].filter(Boolean).join(' · ');
   const links=[];
   if(f.tt)links.push(`<a class="lg lg-imdb" title="IMDb" href="https://www.imdb.com/title/${f.tt}" target="_blank" rel="noopener">IMDb</a>`);
@@ -861,13 +878,10 @@ function fcard(g){
   const poster=f.p?`<img class="poster" loading="lazy" src="https://image.tmdb.org/t/p/w154${f.p}" alt="">`:'<div class="poster-none">🎞️</div>';
   const dossIds=g.recs.filter(r=>r.id).map(r=>r.id);
   const dossBar=dossIds.length?`<a class="dossbar" href="https://www.nationaalarchief.nl/onderzoeken/index/nt00402/${dossIds[0]}" target="_blank" rel="noopener" data-doss="${dossIds.join(',')}" title="Open het keuringsrapport bij het Nationaal Archief">📄 Dossier${dossIds.length>1?'s ('+dossIds.length+')':''}</a>`:'';
-  const KMAX=6;
-  const keur=g.recs.slice(0,KMAX).map(r=>{
-    const oc=OCLS[r.o]||'q', ol=OL[r.o]||'?', dat=fmtDate(r.d);
-    const flags=(r.k?'<span class="kflag" title="coupures">✂</span>':'')+(r.ho?`<span class="kflag" title="herkeurd → ${OL[r.ho]||'?'}">↻</span>`:'');
-    const subt=(r.t!==f.t)?`<span class="kast" data-tip="titel bij deze keuring:<br><b>${esc(r.t)}</b>">*</span>`:'';
-    return `<div class="keur"><span class="fb ${oc}">${ol}</span><span class="kdat">${dat}${flags}</span>${subt}</div>`;
-  }).join('');
+  const npages=Math.ceil(g.recs.length/KMAX);
+  if(g.ci&&npages>1) window._KR[g.ci]={recs:g.recs,ft:f.t};
+  const keur=keurPage(g.recs,f.t,0);
+  const pager=(g.ci&&npages>1)?`<div class="keurpager" data-ci="${g.ci}"><button class="knav kprev" disabled aria-label="vorige">‹</button><span class="kpg">1 / ${npages}</span><button class="knav knext" aria-label="volgende">›</button></div>`:'';
   const keurHead=g.recs.length>1?`<div class="keurhead">${g.recs.length} keuringen</div>`:'<div class="keurhead">Keuring</div>';
   const anyAlt=g.recs.some(r=>r.t!==f.t);
   return `<div class="fcard o-${cls} ${g.strict===3?'banned':''}"><div class="accent"></div><div class="frow"><div class="fleft">${poster}</div><div class="body">`+
@@ -878,7 +892,7 @@ function fcard(g){
     (cg?`<div class="m">${esc(cg)}</div>`:'')+
     (badges.length?`<div class="fbadges">${badges.join('')}</div>`:'')+
     (links.length?`<div class="flinks">${links.join('')}</div>`:'')+
-    keurHead+`<div class="keurlist">${keur}${g.recs.length>KMAX?`<div class="keurnote">… en nog ${nl(g.recs.length-KMAX)} keuringen</div>`:''}</div>`+
+    keurHead+`<div class="keurlist" data-page="0">${keur}</div>`+pager+
     `</div></div>`+dossBar+`</div>`;
 }
 let deb;
@@ -889,7 +903,16 @@ updFilterCounts();
 document.querySelectorAll('.fdrop-btn').forEach(b=>b.onclick=e=>{e.stopPropagation();const d=b.parentNode,was=d.classList.contains('open');document.querySelectorAll('.fdrop').forEach(x=>x.classList.remove('open'));if(!was)d.classList.add('open');});
 document.querySelectorAll('.fdrop-menu').forEach(m=>m.onclick=e=>e.stopPropagation());
 document.addEventListener('click',()=>document.querySelectorAll('.fdrop').forEach(x=>x.classList.remove('open')));
-document.getElementById('cards').addEventListener('click',e=>{const a=e.target.closest('a[data-doss]');if(!a)return;const ids=a.dataset.doss.split(',');if(ids.length<=1)return;e.preventDefault();ids.slice(0,8).forEach(id=>window.open('https://www.nationaalarchief.nl/onderzoeken/index/nt00402/'+id,'_blank','noopener'));});
+document.getElementById('cards').addEventListener('click',e=>{
+  const nav=e.target.closest('.keurpager .knav'); if(nav){e.preventDefault();
+    const pager=nav.closest('.keurpager'), data=window._KR[pager.dataset.ci]; if(!data)return;
+    const list=pager.previousElementSibling, np=Math.ceil(data.recs.length/KMAX);
+    let pg=+list.dataset.page; pg=nav.classList.contains('knext')?Math.min(pg+1,np-1):Math.max(pg-1,0);
+    list.dataset.page=pg; list.innerHTML=keurPage(data.recs,data.ft,pg);
+    pager.querySelector('.kpg').textContent=(pg+1)+' / '+np;
+    pager.querySelector('.kprev').disabled=pg===0; pager.querySelector('.knext').disabled=pg===np-1; bindTips(); return;}
+  const pn=e.target.closest('.pname');if(pn){e.preventDefault();const q=pn.dataset.q;state.q=q;document.getElementById('q').value=q;applyFilters();scrollTo(0,0);return;}
+  const a=e.target.closest('a[data-doss]');if(!a)return;const ids=a.dataset.doss.split(',');if(ids.length<=1)return;e.preventDefault();ids.slice(0,8).forEach(id=>window.open('https://www.nationaalarchief.nl/onderzoeken/index/nt00402/'+id,'_blank','noopener'));});
 document.querySelector('.filterbar').addEventListener('change',e=>{const t=e.target;if(t.tagName!=='INPUT')return;
   if('o' in t.dataset){t.checked?state.oordeel.add(t.dataset.o):state.oordeel.delete(t.dataset.o);}
   else if('c' in t.dataset){const c=+t.dataset.c;t.checked?state.cat.add(c):state.cat.delete(c);}
