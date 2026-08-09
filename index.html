@@ -559,7 +559,8 @@ function yearchart(elId,legId,data,keys,opt){
     legEl.querySelectorAll('.toggle[data-tg="gran"] button').forEach(b=>b.onclick=()=>{
       gran=b.dataset.v; b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); draw();});
     legEl.querySelectorAll('.toggle[data-tg="excl"] button').forEach(b=>b.onclick=()=>{
-      excl=b.dataset.v==='1'; b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); draw();});
+      excl=b.dataset.v==='1'; b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+      const ex=opt.exclude&&legEl.querySelector(`span[data-k="${opt.exclude.k}"]`); if(ex)ex.classList.toggle('off',excl); draw();});
   }
   draw();
 }
@@ -569,8 +570,8 @@ function drawDonut(id,entries,total){
   entries.forEach(([lab,v,col])=>{if(!v)return;const a1=a0+v/total*2*Math.PI,lg=(a1-a0)>Math.PI?1:0;
     const P=(a,rad)=>[cx+rad*Math.cos(a),cy+rad*Math.sin(a)];const[x1,y1]=P(a0,R),[x2,y2]=P(a1,R),[x3,y3]=P(a1,r),[x4,y4]=P(a0,r);
     g+=`<path d="M${x1} ${y1} A${R} ${R} 0 ${lg} 1 ${x2} ${y2} L${x3} ${y3} A${r} ${r} 0 ${lg} 0 ${x4} ${y4} Z" fill="${col}" data-tip="<b>${esc(lab)}</b><br>${nl(v)} · ${pct(v,total)}"></path>`; a0=a1;});
-  const rows=entries.map(([lab,v,col])=>v?`<div class="sbar" style="grid-template-columns:14px 1fr auto"><i style="width:11px;height:11px;border-radius:3px;background:${col};display:inline-block"></i><span class="nm">${esc(lab)}</span><span class="ct">${nl(v)} · ${pct(v,total)}</span></div>`:'').join('');
-  document.getElementById(id).innerHTML=`<div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap"><svg width="152" height="152" viewBox="0 0 152 152" style="flex:0 0 auto">${g}<text x="76" y="72" text-anchor="middle" style="fill:var(--ink);font-weight:800;font-size:19px">${nl(total)}</text><text x="76" y="90" text-anchor="middle" style="fill:var(--muted);font-size:10px">keuringen</text></svg><div style="flex:1 1 160px">${rows}</div></div>`;
+  const rows=entries.map(([lab,v,col])=>v?`<div style="display:flex;align-items:center;gap:9px;font-size:13.5px;line-height:1.7"><i style="width:11px;height:11px;border-radius:3px;background:${col};flex:none"></i><span style="flex:1;color:var(--ink)">${esc(lab)}</span><span style="color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap">${nl(v)} · ${pct(v,total)}</span></div>`:'').join('');
+  document.getElementById(id).innerHTML=`<div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap"><svg width="152" height="152" viewBox="0 0 152 152" style="flex:0 0 auto">${g}<text x="76" y="72" text-anchor="middle" style="fill:var(--ink);font-weight:800;font-size:19px;font-family:-apple-system,BlinkMacSystemFont,sans-serif">${nl(total)}</text><text x="76" y="90" text-anchor="middle" style="fill:var(--muted);font-size:10px;font-family:-apple-system,BlinkMacSystemFont,sans-serif">keuringen</text></svg><div style="flex:1 1 160px">${rows}</div></div>`;
   bindTips();
 }
 
