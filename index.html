@@ -255,19 +255,18 @@
         <div class="bars" id="oordeelchart"></div>
       </div>
       <div class="card w6">
-        <h2 id="h-studio">Wie voedde de Nederlandse bioscoop?</h2><div class="sub" id="s-studio"></div>
+        <h2 id="h-studio">Wie maakte de films?</h2><div class="sub" id="s-studio"></div>
         <div class="bars" id="studiochart"></div>
       </div>
 
       <div class="card w6">
-        <h2 id="h-rating">Censuur × waardering</h2><div class="sub" id="s-rating"></div>
-        <div class="bars" id="ratingchart"></div>
-        <div id="rating-take"></div>
-      </div>
-      <div class="card w6">
         <h2 id="h-genre">Genre en beoordeling</h2><div class="sub" id="s-genre"></div>
         <div class="bars" id="genrechart"></div>
         <div class="legend" id="genre-leg"></div>
+      </div>
+      <div class="card w6">
+        <h2 id="h-actors">Meest vertoonde sterren</h2><div class="sub" id="s-actors"></div>
+        <div class="bars" id="actorchart"></div>
       </div>
 
       <div class="card w12">
@@ -283,28 +282,16 @@
         <div class="maplegend" id="map-leg"></div>
       </div>
 
-      <div class="card w6">
-        <h2 id="h-actors">Meest vertoonde sterren</h2><div class="sub" id="s-actors"></div>
-        <div class="bars" id="actorchart"></div>
-      </div>
-      <div class="card w6">
-        <h2 id="h-stars">Sterren in de censuur</h2><div class="sub" id="s-stars"></div>
-        <div class="bars" id="starschart"></div>
-      </div>
-
-      <div class="card w12">
-        <h2 id="h-dir">Meest gecensureerde regisseurs</h2><div class="sub" id="s-dir"></div>
-        <div class="bars" id="dirchart"></div>
-      </div>
-
       <div class="card w12">
         <h2 id="h-cens">Censuur door de tijd</h2><div class="sub" id="s-cens"></div>
         <div class="yearchart" id="censchart"></div>
         <div class="legend" id="cens-leg"></div>
       </div>
+
       <div class="card w12">
-        <h2 id="h-length">De film wordt langer</h2><div class="sub" id="s-length"></div>
-        <div class="yearchart" id="lengthchart"></div>
+        <h2 id="h-cp">In de censuur</h2><div class="sub" id="s-cp"></div>
+        <div class="legend" id="cp-tg" style="margin-bottom:2px"></div>
+        <div class="bars" id="cpchart"></div>
       </div>
 
 
@@ -370,6 +357,7 @@ const OCLS={A:"A","14":"f14","18":"f18",X:"X","?":"q"};
 const PALETTE=['#0e7490','#2f6fb0','#8156b8','#1f9e8f','#d67a2e','#4f9d4f','#be123c','#0891b2'];
 const COUNTRY_PAL=['#4e79a7','#e15759','#59a14f','#f28e2b','#b07aa1','#edc948','#76b7b2','#9c755f'];
 const nl=n=>(+n).toLocaleString('nl');
+const fmtDate=x=>{if(!/^\d{4}-\d{2}-\d{2}/.test(x||''))return x||'';const q=x.slice(0,10).split('-');return q[2]+'-'+q[1]+'-'+q[0];};
 const pct=(a,b)=>b?Math.round(a/b*100)+'%':'–';
 const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let STATS=null, FILMS=null;
@@ -449,7 +437,7 @@ function yearchart(elId,legId,data,keys,opt){
         `<div class="yseg" data-tip="<b>${per} · ${esc(k.lab)}</b><br>${nl(d[k.k])} ${opt.unit||'films'}" style="height:${tot?d[k.k]/tot*100:0}%;background:${k.col}"></div>`).join('');
       return `<div class="ycol"><div class="ystack" data-y="${d.y}" style="height:${tot/top*100}%">${segs}</div></div>`;
     }).join('');
-    const labels=D.map(d=>{const show=d.dec?true:d.y%5===0; return `<div class="yxcell">${show?(d.dec?d.y+'s':d.y):''}</div>`;}).join('');
+    const labels=D.map(d=>{const show=d.dec?true:d.y%5===0; return `<div class="yxcell">${show?(d.dec?d.y+'–'+String(d.y+9).slice(2):d.y):''}</div>`;}).join('');
     document.getElementById(elId).innerHTML=
       `<div class="yaxis">${axis}</div><div class="yplot">${grid}${occ}<div class="ycols">${cols}</div></div><div class="yxrow">${labels}</div>`;
     if(opt.onClick&&gran==='jaar') document.getElementById(elId).querySelectorAll('.ystack').forEach(x=>x.onclick=()=>opt.onClick(+x.dataset.y));
@@ -482,7 +470,7 @@ function buildInzichten(){
     [nl(s.total),"keuringsrapporten","1928 – 1960"],
     [nl(s.banned),"films verboden",`${pct(s.banned,s.total)} van het totaal`,"Oordeel “niet toegelaten” — geheel geweigerd voor vertoning.",'red'],
     [nl(s.coupures),"films met coupures",`${pct(s.coupures,s.total)} — gedeeltelijk geknipt`,"De commissie eiste dat stukken film verwijderd werden. Het rapport noteert meestal de geknipte lengte in meters, niet de reden."],
-    [nl(s.herkeuringen),"films herkeurd","opnieuw beoordeeld"],
+    [nl(s.herkeuringen),"films herkeurd"],
     [nl(s.coverage.rating),"met IMDb-score",`${nl(s.coverage.poster)} met poster · ${nl(s.coverage.director)} met regie`,"Verrijkt via Cinema Context → IMDb, TMDb en Wikidata."],
   ]);
 
@@ -506,15 +494,6 @@ function buildInzichten(){
   setSub('studio',`${nl(sc.distinct)} maatschappijen · bij ${pct(sc.withFabriek,sc.total)} van de rapporten vermeld`,sc.withFabriek,
     'Bij de rest (vaak reclame, journaals of losse fragmenten) staat geen productiemaatschappij genoemd. Klik een naam voor Wikipedia.');
 
-  // Censuur × waardering
-  const rbo=s.ratingByOordeel||{};
-  bars('ratingchart',['A','14','18','X'].filter(k=>rbo[k]).map(k=>[OL[k],rbo[k].mean,OC[k],`n = ${nl(rbo[k].n)} films`]),null,
-    {fmt:v=>v.toFixed(2)});
-  const rc=s.ratingCut||{};
-  if(rc.cut&&rc.cut.mean!=null)
-    document.getElementById('rating-take').innerHTML=`<div class="takeaway">Geknipte films scoren gemiddeld <b>${rc.cut.mean.toFixed(2)}</b> — vrijwel gelijk aan niet-geknipte films (<b>${rc.uncut.mean.toFixed(2)}</b>). De schaar volgde de zeden, niet de kwaliteit.</div>`;
-  setSub('rating','gemiddelde IMDb-beoordeling per strengste oordeel (0–10)',null);
-
   // Genre — toggle oordeel / censuur (gestapelde balk)
   function genreRow(g,parts,valDisp){
     const seg=parts.map(pp=>pp[1]?`<span class="seg" data-tip="<b>${esc(g.g)} · ${pp[0]}</b><br>${nl(pp[1])} · ${pct(pp[1],g.tot)}" style="width:${pp[1]/g.tot*100}%;background:${pp[2]}"></span>`:'').join('');
@@ -526,8 +505,8 @@ function buildInzichten(){
     if(mode==='cens'){
       const rows=[...gs].sort((a,b)=>((b.cut+b.ban)/b.tot)-((a.cut+a.ban)/a.tot));
       document.getElementById('genrechart').innerHTML=rows.map(g=>
-        genreRow(g,[['niet geknipt',g.tot-g.cut-g.ban,'#eef1f4'],['geknipt',g.cut,'var(--f18)'],['verboden',g.ban,'var(--X)']],pct(g.cut+g.ban,g.tot))).join('');
-      document.getElementById('genre-leg').innerHTML=`<span style="cursor:default"><i style="background:var(--f18)"></i>geknipt</span><span style="cursor:default"><i style="background:var(--X)"></i>verboden</span>`+tg;
+        genreRow(g,[['goedgekeurd',g.tot-g.cut-g.ban,'var(--A)'],['geknipt',g.cut,'var(--f18)'],['verboden',g.ban,'var(--X)']],pct(g.cut+g.ban,g.tot))).join('');
+      document.getElementById('genre-leg').innerHTML=`<span style="cursor:default"><i style="background:var(--A)"></i>goedgekeurd</span><span style="cursor:default"><i style="background:var(--f18)"></i>geknipt</span><span style="cursor:default"><i style="background:var(--X)"></i>verboden</span>`+tg;
       setSub('genre','aandeel van elk genre dat geknipt of verboden werd · strengst boven (Wikidata)');
     } else {
       const gk=[['A','Alle leeftijden','var(--A)'],['f14','14 jaar','var(--f14)'],['f18','18 jaar','var(--f18)'],['X','Verboden','var(--X)']];
@@ -554,13 +533,23 @@ function buildInzichten(){
     `${nl(a.reach)} IMDb-stemmen bereikt · ${a.cens}× in geknipte/verboden film`,null,imdbName(a.id)]),null);
   setSub('actors','aantal films uit dit corpus waarin de acteur voorkwam · klik voor IMDb',s.coverage.cast);
 
-  // Sterren & regisseurs in censuur — combibalk geknipt vs verboden
+  // In de censuur — toggle acteurs / regisseurs (combibalk geknipt vs verboden)
   const censSegs=x=>[[x.cut,'var(--f18)','geknipt'],[x.banned,'var(--X)','verboden']];
   const censLeg=[['var(--f18)','geknipt'],['var(--X)','verboden']];
-  stackBars('starschart',(s.starsCensored||[]).map(a=>[a.n,censSegs(a),`${a.pct}%`,null,imdbName(a.id)]),{legend:censLeg});
-  setSub('stars','geknipt vs. verboden · balk = aandeel van het getoonde oeuvre · min. 12 films');
-  stackBars('dirchart',(s.censoredDirectors||[]).map(d=>[d.n,censSegs(d),nl(d.cens),`${d.pct}%`,wikiUrl(d.n)]),{legend:censLeg});
-  setSub('dir','geknipt vs. verboden films per regisseur · % = aandeel van hun getoonde oeuvre');
+  function drawCensPeople(mode){
+    const tg=`<span class="legtools"><span class="toggle" data-tg="cp"><button data-v="acteurs"${mode!=='regisseurs'?' class="on"':''}>Acteurs</button><button data-v="regisseurs"${mode==='regisseurs'?' class="on"':''}>Regisseurs</button></span></span>`;
+    document.getElementById('cp-tg').innerHTML=censLeg.map(l=>`<span style="cursor:default"><i style="background:${l[0]}"></i>${l[1]}</span>`).join('')+tg;
+    if(mode==='regisseurs'){
+      stackBars('cpchart',(s.censoredDirectors||[]).map(d=>[d.n,censSegs(d),nl(d.cens),`${d.pct}%`,wikiUrl(d.n)]));
+      setSub('cp','regisseurs met de meeste geknipte of verboden films · % = aandeel van hun oeuvre');
+    } else {
+      stackBars('cpchart',(s.starsCensored||[]).map(a=>[a.n,censSegs(a),`${a.pct}%`,null,imdbName(a.id)]));
+      setSub('cp','acteurs wier getoonde oeuvre het vaakst geknipt of verboden werd · min. 12 films');
+    }
+    document.querySelectorAll('#cp-tg .toggle[data-tg="cp"] button').forEach(b=>b.onclick=()=>drawCensPeople(b.dataset.v));
+    bindTips();
+  }
+  drawCensPeople('acteurs');
 
   // Censuur door de tijd (aandeel per jaar)
   const cd=(s.censTimeline||[]).map(t=>({y:t.y,cut:t.tot?+(t.cut/t.tot*100).toFixed(1):0,banned:t.tot?+(t.banned/t.tot*100).toFixed(1):0}));
@@ -568,10 +557,6 @@ function buildInzichten(){
     {occ:[1940,1945],occLabel:'bezetting',everyLabel:5,unit:'%'});
   setSub('cens','aandeel van de films dat per jaar geknipt of verboden werd');
 
-  // Filmlengte door de tijd
-  const ld=(s.lengthByYear||[]).map(l=>({y:l.y,med:l.med}));
-  yearchart('lengthchart','',ld,[{k:'med',lab:'mediane lengte',col:'var(--accent)'}],{everyLabel:5,unit:'m'});
-  setSub('length','mediane lengte (meter) van fictiefilms — de opkomst van de avondvullende film');
 
   loadMap();
   renderFinds();
@@ -594,7 +579,7 @@ function setupMap(){
   const cm=STATS.countryMap;
   const decs=[...new Set(Object.values(cm).flatMap(c=>Object.keys(c.dec).map(Number)))].sort((a,b)=>a-b);
   document.getElementById('map-tg').innerHTML=`<span class="legtools"><span class="toggle" data-tg="mapdec"><button data-v="all" class="on">Alle jaren</button>`+
-    decs.map(dd=>`<button data-v="${dd}">${dd}s</button>`).join('')+`</span></span>`;
+    decs.map(dd=>`<button data-v="${dd}">${dd}–${String(dd+9).slice(2)}</button>`).join('')+`</span></span>`;
   document.querySelectorAll('#map-tg .toggle button').forEach(b=>b.onclick=()=>{MAP_DEC=b.dataset.v;
     b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); fillMap();});
   document.getElementById('map-leg').innerHTML='<span class="sw"><i style="background:#eef1f4"></i>geen</span>'+
@@ -622,6 +607,9 @@ const FINDS=[
   body:"De commissie ontzag geen grote namen. Hustons <i>The Maltese Falcon</i>, Hitchcocks <i>Rope</i>, Buñuels <i>Un Chien Andalou</i> en Fellini's <i>La Dolce Vita</i> werden alle vier geheel verboden voor de Nederlandse bioscoop.",
   meta:"4 van de 796 verboden films",
   links:[["Maltezer valk",CCID('F021121')],["Rope",CCID('F015725')],["Andalusische Hond",CCID('F034706')],["Het Zoete leven",CCID('F018631')]]},
+ {emoji:"⚖️",tag:"Streng ≠ slecht",title:"De schaar volgde de zeden, niet de kwaliteit",
+  body:"Verboden films kregen op IMDb gemiddeld géén lagere waardering dan toegelaten films, en geknipte films (6,16) scoren vrijwel gelijk aan ongeknipte (6,23). De commissie oordeelde over zeden en moraal — niet over filmkwaliteit.",
+  meta:"gemiddelde IMDb-score per oordeel: 6,1–6,3"},
  {emoji:"↩️",tag:"Tweede kans",title:"Van verboden naar toegelaten",
   body:"Een verbod was niet altijd het eindpunt. 183 eerst geweigerde films kregen bij een herkeuring alsnog groen licht — soms jaren later, soms na het knippen van enkele scènes.",
   meta:"183 films herzien",zoek:{oordeel:['X'],re:true},zoekLabel:"Bekijk de herziene films →"},
@@ -660,13 +648,13 @@ function renderFinds(){
   const dotEls=[...dots.children], step=()=>tr.clientWidth+16;
   let cur=0; const setActive=i=>dotEls.forEach((d,j)=>d.classList.toggle('on',j===i)); setActive(0);
   const go=i=>{cur=((i%FINDS.length)+FINDS.length)%FINDS.length; tr.scrollLeft=cur*step(); setActive(cur);};
-  let timer; const auto=()=>{clearInterval(timer);timer=setInterval(()=>go(cur+1),6000);};
+  let timer,paused=false; const auto=()=>{clearInterval(timer);timer=setInterval(()=>{if(!paused)go(cur+1);},6000);};
   const nav=i=>{go(i);auto();};
   dotEls.forEach(d=>d.onclick=()=>nav(+d.dataset.i));
   document.getElementById('fnext').onclick=()=>nav(cur+1);
   document.getElementById('fprev').onclick=()=>nav(cur-1);
   const finds=document.querySelector('.finds');
-  finds.addEventListener('mouseenter',()=>clearInterval(timer)); finds.addEventListener('mouseleave',auto);
+  finds.addEventListener('mouseenter',()=>paused=true); finds.addEventListener('mouseleave',()=>paused=false);
   let t; tr.addEventListener('scroll',()=>{clearTimeout(t);t=setTimeout(()=>{cur=Math.round(tr.scrollLeft/step());setActive(cur);},90);});
   tr.addEventListener('click',e=>{const a=e.target.closest('a[data-zoek]');if(!a)return;e.preventDefault();_findZoek(JSON.parse(a.dataset.zoek));});
   auto();
@@ -758,7 +746,7 @@ function fcard(g){
   if(f.ci)links.push(`<a href="https://www.cinemacontext.nl/id/${f.ci}" target="_blank" rel="noopener">Cinema Context ↗</a>`);
   const poster=f.p?`<img class="poster" loading="lazy" src="https://image.tmdb.org/t/p/w154${f.p}" alt="">`:'';
   const keur=g.recs.map(r=>{
-    const oc=OCLS[r.o]||'q', ol=OL[r.o]||'?', dat=(r.d||'').slice(0,10);
+    const oc=OCLS[r.o]||'q', ol=OL[r.o]||'?', dat=fmtDate(r.d);
     const flags=(r.k?'<span class="kflag" title="coupures">✂</span>':'')+(r.ho?`<span class="kflag" title="herkeurd → ${OL[r.ho]||'?'}">↻</span>`:'');
     const subt=(r.t!==f.t)?`<span class="ktitle">${esc(r.t)}</span>`:'';
     const doss=r.id?`https://www.nationaalarchief.nl/onderzoeken/index/nt00402/${r.id}`:null;
