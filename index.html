@@ -358,20 +358,20 @@
       </div>
     </div>
     <div class="filterbar">
-      <div class="fdrop">
+      <div class="fdrop subset">
         <button class="fdrop-btn" type="button">Leeftijd <span class="fcnt"></span>▾</button>
         <div class="fdrop-menu">
-          <label class="chk"><input type="checkbox" data-o="A"> Alle leeftijden</label>
-          <label class="chk"><input type="checkbox" data-o="14"> 14 jaar</label>
-          <label class="chk"><input type="checkbox" data-o="18"> 18 jaar</label>
-          <label class="chk"><input type="checkbox" data-o="X"> Verboden</label>
+          <label class="chk"><input type="checkbox" data-o="A" checked> Alle leeftijden</label>
+          <label class="chk"><input type="checkbox" data-o="14" checked> 14 jaar</label>
+          <label class="chk"><input type="checkbox" data-o="18" checked> 18 jaar</label>
+          <label class="chk"><input type="checkbox" data-o="X" checked> Verboden</label>
         </div>
       </div>
-      <div class="fdrop">
+      <div class="fdrop subset">
         <button class="fdrop-btn" type="button">Soort <span class="fcnt"></span>▾</button>
         <div class="fdrop-menu">
-          <label class="chk"><input type="checkbox" data-c="1"> Fictie</label>
-          <label class="chk"><input type="checkbox" data-c="0"> Non-fictie</label>
+          <label class="chk"><input type="checkbox" data-c="1" checked> Fictie</label>
+          <label class="chk"><input type="checkbox" data-c="0" checked> Non-fictie</label>
         </div>
       </div>
       <div class="fdrop">
@@ -785,7 +785,7 @@ function openTab(name){
 document.querySelectorAll('.tabbar button').forEach(b=>b.onclick=()=>openTab(b.dataset.pane));
 
 /* ---------- zoeken ---------- */
-const state={q:'',yearFrom:null,yearTo:null,oordeel:new Set(),cat:new Set(),cut:false,re:false,poster:false,sort:'d'};
+const state={q:'',yearFrom:null,yearTo:null,oordeel:new Set(['A','14','18','X']),cat:new Set([0,1]),cut:false,re:false,poster:false,sort:'d'};
 let filtered=[],shown=0,GROUPS=null; const PAGE=48;
 function setupYear(){
   const ys=STATS.years, YMIN=ys[0], YMAX=ys[ys.length-1];
@@ -817,10 +817,10 @@ function buildGroups(){
 }
 function recMatch(f){
   if(state.yearFrom){const y=+((f.d||'0').slice(0,4)); if(y<state.yearFrom||y>state.yearTo)return false;}
-  if(state.oordeel.size&&!state.oordeel.has(f.o))return false;
+  if(state.oordeel.size>0&&state.oordeel.size<4&&!state.oordeel.has(f.o))return false;
   if(state.cut&&!f.k)return false;
   if(state.re&&!f.ho)return false;
-  if(state.cat.size&&!state.cat.has(f.c))return false;
+  if(state.cat.size===1&&!state.cat.has(f.c))return false;
   return true;
 }
 function applyFilters(){ ensureFilms(()=>{
@@ -839,7 +839,7 @@ function applyFilters(){ ensureFilms(()=>{
 });}
 function renderMore(){
   const c=document.getElementById('cards'), slice=filtered.slice(shown,shown+PAGE);
-  c.insertAdjacentHTML('beforeend',slice.map(fcard).join('')); shown+=slice.length;
+  c.insertAdjacentHTML('beforeend',slice.map(fcard).join('')); shown+=slice.length; bindTips();
   const b=document.getElementById('more');
   if(shown<filtered.length){b.style.display='block';b.textContent=`Toon meer (${nl(filtered.length-shown)} resterend)`;}else b.style.display='none';
 }
@@ -860,10 +860,11 @@ function fcard(g){
   const poster=f.p?`<img class="poster" loading="lazy" src="https://image.tmdb.org/t/p/w154${f.p}" alt="">`:'<div class="poster-none">🎞️</div>';
   const dossIds=g.recs.filter(r=>r.id).map(r=>r.id);
   const dossBar=dossIds.length?`<a class="dossbar" href="https://www.nationaalarchief.nl/onderzoeken/index/nt00402/${dossIds[0]}" target="_blank" rel="noopener" data-doss="${dossIds.join(',')}" title="Open het keuringsrapport bij het Nationaal Archief">📄 Dossier${dossIds.length>1?'s ('+dossIds.length+')':''}</a>`:'';
-  const keur=g.recs.map(r=>{
+  const KMAX=6;
+  const keur=g.recs.slice(0,KMAX).map(r=>{
     const oc=OCLS[r.o]||'q', ol=OL[r.o]||'?', dat=fmtDate(r.d);
     const flags=(r.k?'<span class="kflag" title="coupures">✂</span>':'')+(r.ho?`<span class="kflag" title="herkeurd → ${OL[r.ho]||'?'}">↻</span>`:'');
-    const subt=(r.t!==f.t)?`<span class="kast" title="${esc(r.t)}">*</span>`:'';
+    const subt=(r.t!==f.t)?`<span class="kast" data-tip="titel bij deze keuring:<br><b>${esc(r.t)}</b>">*</span>`:'';
     return `<div class="keur"><span class="fb ${oc}">${ol}</span><span class="kdat">${dat}${flags}</span>${subt}</div>`;
   }).join('');
   const keurHead=g.recs.length>1?`<div class="keurhead">${g.recs.length} keuringen</div>`:'<div class="keurhead">Keuring</div>';
@@ -876,18 +877,18 @@ function fcard(g){
     (cg?`<div class="m">${esc(cg)}</div>`:'')+
     (badges.length?`<div class="fbadges">${badges.join('')}</div>`:'')+
     (links.length?`<div class="flinks">${links.join('')}</div>`:'')+
-    keurHead+`<div class="keurlist">${keur}</div>`+
-    (anyAlt?`<div class="keurnote">* afwijkende titel bij die keuring — wijs de asterisk aan</div>`:'')+
+    keurHead+`<div class="keurlist">${keur}${g.recs.length>KMAX?`<div class="keurnote">… en nog ${nl(g.recs.length-KMAX)} keuringen</div>`:''}</div>`+
     `</div></div>`+dossBar+`</div>`;
 }
 let deb;
 document.getElementById('q').addEventListener('input',e=>{clearTimeout(deb);deb=setTimeout(()=>{state.q=e.target.value;applyFilters();},170);});
 document.getElementById('sort').addEventListener('change',e=>{state.sort=e.target.value;applyFilters();});
-function updFilterCounts(){document.querySelectorAll('.fdrop').forEach(d=>{const n=d.querySelectorAll('input:checked').length;const c=d.querySelector('.fcnt');c.textContent=n;c.classList.toggle('on',n>0);});}
+function updFilterCounts(){document.querySelectorAll('.fdrop').forEach(d=>{const inp=d.querySelectorAll('input'),total=inp.length,n=[...inp].filter(x=>x.checked).length,active=d.classList.contains('subset')?(n>0&&n<total):(n>0);const c=d.querySelector('.fcnt');c.textContent=n;c.classList.toggle('on',active);});}
+updFilterCounts();
 document.querySelectorAll('.fdrop-btn').forEach(b=>b.onclick=e=>{e.stopPropagation();const d=b.parentNode,was=d.classList.contains('open');document.querySelectorAll('.fdrop').forEach(x=>x.classList.remove('open'));if(!was)d.classList.add('open');});
 document.querySelectorAll('.fdrop-menu').forEach(m=>m.onclick=e=>e.stopPropagation());
 document.addEventListener('click',()=>document.querySelectorAll('.fdrop').forEach(x=>x.classList.remove('open')));
-document.getElementById('cards').addEventListener('click',e=>{const a=e.target.closest('a[data-doss]');if(!a)return;const ids=a.dataset.doss.split(',');if(ids.length<=1)return;e.preventDefault();ids.forEach(id=>window.open('https://www.nationaalarchief.nl/onderzoeken/index/nt00402/'+id,'_blank','noopener'));});
+document.getElementById('cards').addEventListener('click',e=>{const a=e.target.closest('a[data-doss]');if(!a)return;const ids=a.dataset.doss.split(',');if(ids.length<=1)return;e.preventDefault();ids.slice(0,8).forEach(id=>window.open('https://www.nationaalarchief.nl/onderzoeken/index/nt00402/'+id,'_blank','noopener'));});
 document.querySelector('.filterbar').addEventListener('change',e=>{const t=e.target;if(t.tagName!=='INPUT')return;
   if('o' in t.dataset){t.checked?state.oordeel.add(t.dataset.o):state.oordeel.delete(t.dataset.o);}
   else if('c' in t.dataset){const c=+t.dataset.c;t.checked?state.cat.add(c):state.cat.delete(c);}
