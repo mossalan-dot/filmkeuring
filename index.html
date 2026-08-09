@@ -39,6 +39,21 @@
   .intro b{color:var(--ink)}
   .tabpane{display:none}
   .tabpane.on{display:block}
+  .prose h3{margin:0 0 8px;font-size:17px;letter-spacing:-.01em}
+  .prose h3:not(:first-child){margin-top:4px}
+  .prose p{margin:0 0 12px;font-size:14.5px;line-height:1.6;color:#374151;max-width:74ch}
+  .prose p:last-child{margin-bottom:0}
+  .prose b{color:var(--ink)}
+  .prose ul{margin:0 0 12px;padding-left:20px;font-size:14.5px;line-height:1.6;color:#374151;max-width:74ch}
+  .prose li{margin:3px 0}
+  .prose a{color:var(--accent);font-weight:600}
+  .prose .steps{list-style:none;padding:0;counter-reset:st}
+  .prose .steps li{position:relative;padding-left:34px;margin:9px 0}
+  .prose .steps li::before{counter-increment:st;content:counter(st);position:absolute;left:0;top:-1px;width:23px;height:23px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+  .srcgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:4px}
+  .srcgrid a{display:block;background:var(--card2,#eef3f4);border:1px solid var(--line);border-radius:10px;padding:11px 14px;text-decoration:none;color:var(--ink);font-weight:600;font-size:13.5px}
+  .srcgrid a:hover{border-color:var(--accent)}
+  .srcgrid a span{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
   /* Bijzondere vondsten — Carnegie-stijl */
   .finds{position:relative;background:var(--cream);border:1px solid var(--cream-line);border-radius:14px;padding:16px 62px;margin-bottom:26px}
   .finds .flabel{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);font-weight:700;margin-bottom:11px}
@@ -245,6 +260,7 @@
 <div class="tabbar">
   <button id="tabbtn-zoeken" data-pane="zoeken">🔎 Zoeken</button>
   <button id="tabbtn-inzichten" class="on" data-pane="inzichten">📊 Inzichten</button>
+  <button id="tabbtn-over" data-pane="over">ℹ️ Over</button>
 </div>
 
 <main>
@@ -369,6 +385,63 @@
     <div class="count" id="count">Laden…</div>
     <div class="cards" id="cards"></div>
     <button class="morebtn" id="more" style="display:none"></button>
+  </div>
+  <!-- ============ OVER ============ -->
+  <div class="tabpane" id="pane-over">
+    <p class="intro">Hoe deze bijna vijftigduizend keuringsrapporten van papier naar een doorzoekbare, verrijkte database gingen — en wat de cijfers wel en niet zeggen.</p>
+    <div class="grid">
+      <div class="card w12 prose">
+        <h3>De Centrale Commissie voor de Filmkeuring</h3>
+        <p>Met de <b>Bioscoopwet van 1926</b> kreeg Nederland één landelijke filmkeuring. Van 1928 tot 1960 moest elke film die in een bioscoop vertoond werd eerst langs deze commissie. Zij kon een film toelaten voor <b>alle leeftijden</b>, vanaf <b>14</b> of <b>18 jaar</b>, hem gedeeltelijk laten <b>knippen</b> (coupures), of <b>geheel verbieden</b>. Plaatselijke commissies en burgemeesters hielden daarnaast het recht op <i>nakeuring</i>.</p>
+        <p>De rapporten zijn bewaard gebleven als index <b>NT00402</b> (toegang 2.04.60) bij het Nationaal Archief: 48.499 keuringen, waarvan 796 verboden en 2.460 met coupures. De onderliggende dossiers zijn bij het NA in te zien; per film linkt deze site naar het originele rapport.</p>
+      </div>
+
+      <div class="card w12 prose">
+        <h3>Van keuringsrapport naar dataset</h3>
+        <p>De ruwe index is een tabel met titel, aanvrager, productiemaatschappij, lengte, datum, oordeel en coupures. Twee dingen zijn opgeschoond voor de leesbaarheid:</p>
+        <ul>
+          <li><b>Titels</b> — de archivarische schrijfwijze zet het lidwoord achteraan (“Bruiden van Dracula, De”). Dat is teruggedraaid naar “De Bruiden van Dracula”. Een puntkomma scheidt taalvarianten; die staan nu als <i>“ook bekend als”</i> en zijn doorzoekbaar.</li>
+          <li><b>Coupures</b> — het rapport noteert meestal alleen de geknipte lengte in meters, zelden de reden. “Geknipt” betekent hier dus: er is iets verwijderd, niet wat of waarom.</li>
+        </ul>
+      </div>
+
+      <div class="card w12 prose">
+        <h3>De verrijking — via Cinema Context naar IMDb en meer</h3>
+        <p>De index zelf bevat geen posters, beoordelingen of cast. Die zijn toegevoegd via één sleutel: elke film in NT00402 verwijst naar <b>Cinema Context</b>, de wetenschappelijke database van de Nederlandse filmcultuur. En de Cinema Context-pagina van een échte speelfilm bevat het <b>IMDb-nummer</b> (het <code>tt…</code>-id). Dat nummer is de brug naar de rest van de open-databronnen:</p>
+        <ol class="steps">
+          <li>Van de ~20.900 unieke fictie-pagina's op Cinema Context leverde <b>65%</b> een IMDb-id op (obscure reclame- en journaalfilms hebben er geen).</li>
+          <li>Met dat id haalden we <b>posters</b> op bij TMDb (16.066 films), de <b>IMDb-gebruikersscore</b> uit IMDb's eigen open datasets (15.226), en <b>land, genre, regisseur en een Wikipedia-link</b> uit Wikidata (12.905 landen, 12.842 regisseurs).</li>
+          <li>De <b>cast</b> komt uit IMDb's <code>title.principals</code>-dataset, gekoppeld op datzelfde id: 13.401 films, 17.924 acteurs.</li>
+        </ol>
+        <p>Historische staten zijn daarbij samengevoegd tot moderne landen (de zeven Duitslanden — Keizerrijk, Weimar, nazi-Duitsland, DDR, BRD… — worden samen “Duitsland”). Budget- en opbrengstcijfers bestaan wel in Wikidata, maar zijn voor deze periode te schaars om te tonen.</p>
+      </div>
+
+      <div class="card w12 prose">
+        <h3>Wat de cijfers wel en niet zeggen</h3>
+        <ul>
+          <li>De verrijking dekt vrijwel alleen <b>fictiefilms</b> met een IMDb-vermelding. Journaals, reclame en veel Nederlandse producties blijven zonder poster of score.</li>
+          <li>De <b>IMDb-score</b> is een moderne publiekswaardering, geen oordeel uit de jaren '30 — leuk als context, niet als historische bron.</li>
+          <li>Een film kon <b>meerdere keren</b> gekeurd worden (heruitgave, gewijzigde versie, trailer); die keuringen zijn hier tot één filmkaart gebundeld, elk met een eigen dossierlink.</li>
+        </ul>
+      </div>
+
+      <div class="card w12 prose">
+        <h3>Bronnen</h3>
+        <div class="srcgrid">
+          <a href="https://www.nationaalarchief.nl/onderzoeken/zoekhulpen/filmkeuringsrapporten-1928-1960" target="_blank" rel="noopener">Nationaal Archief<span>Index NT00402 · zoekhulp & dossiers</span></a>
+          <a href="https://www.cinemacontext.nl" target="_blank" rel="noopener">Cinema Context<span>Nederlandse filmcultuur · IMDb-koppeling</span></a>
+          <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDb<span>Posters</span></a>
+          <a href="https://developer.imdb.com/non-commercial-datasets/" target="_blank" rel="noopener">IMDb datasets<span>Scores, stemmen & cast</span></a>
+          <a href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata<span>Land, genre, regisseur, Wikipedia</span></a>
+        </div>
+      </div>
+
+      <div class="card w12 prose">
+        <h3>Colofon</h3>
+        <p>Samenstelling en visualisatie: <a href="https://alanmoss.nl" target="_blank" rel="noopener">Alan Moss</a>. Onderdeel van de <a href="https://archief.alanmoss.nl" target="_blank" rel="noopener">archiefprojecten</a>. De brondata van het Nationaal Archief is CC0. Broncode: <a href="https://github.com/mossalan-dot/filmkeuring" target="_blank" rel="noopener">github.com/mossalan-dot/filmkeuring</a>.</p>
+        <p style="font-size:12px;color:var(--muted)">Deze site gebruikt de TMDb-API maar is niet door TMDb goedgekeurd of gecertificeerd. Filmgegevens © de respectieve bronnen.</p>
+      </div>
+    </div>
   </div>
 </main>
 
