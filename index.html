@@ -403,9 +403,9 @@ function bindTips(){
 }
 function setSub(id,text,n,note){
   const s=document.getElementById('s-'+id); if(s) s.textContent=text;
-  if(n!=null){const h=document.getElementById('h-'+id);
+  if(n!=null||note){const h=document.getElementById('h-'+id);
     if(h&&!h.querySelector('.qmark')){const q=document.createElement('span');q.className='qmark';q.textContent='?';
-      q.setAttribute('data-tip',(note?esc(note)+' — ':'')+`n = ${nl(n)} ingevulde records`);h.appendChild(document.createTextNode(' '));h.appendChild(q);}}
+      q.setAttribute('data-tip',(note?esc(note):'')+(n!=null?((note?' — ':'')+`n = ${nl(n)} ingevulde records`):''));h.appendChild(document.createTextNode(' '));h.appendChild(q);}}
 }
 function kpi(items){document.getElementById('kpis').innerHTML=items.map(([v,l,s,tip,cls])=>
   `<div class="kpi ${cls||''}">${tip?`<span class="q" data-tip="${esc(tip)}">?</span>`:''}<div class="v">${v}</div><div class="l">${l}</div>${s?`<div class="s">${s}</div>`:''}</div>`).join('');}
@@ -506,7 +506,7 @@ function buildInzichten(){
   yearchart('timeline','timeline-leg',s.timeline.map(t=>({y:t.y,A:t.A,f14:t.f14,f18:t.f18,X:t.X,q:t.q})),tkeys,
     {occ:[1940,1945],occLabel:'bezetting',decade:true,
      onClick:y=>{openTab('zoeken');window._setYear(y);}});
-  setSub('timeline','gestapeld naar oordeel · klik een reeks om te isoleren, of een kolom om dat jaar te doorzoeken');
+  setSub('timeline','gestapeld naar oordeel',null,'Klik een reeks in de legenda om alleen die te tonen; klik een kolom om dat jaar in de zoeker te openen.');
 
   // Oordeel
   const ov=['A','14','18','X','?'].filter(k=>s.oordeel[k]);
@@ -517,8 +517,7 @@ function buildInzichten(){
   const wikiUrl=q=>`https://nl.wikipedia.org/w/index.php?search=${encodeURIComponent(q)}`;
   bars('studiochart',s.topStudios.slice(0,12).map(x=>[x.n,x.c,'var(--accent)',null,x.l||'',wikiUrl(x.n)]),s.total);
   const sc=s.studioCoverage;
-  setSub('studio',`${nl(sc.distinct)} maatschappijen · bij ${pct(sc.withFabriek,sc.total)} van de rapporten vermeld`,sc.withFabriek,
-    'Bij de rest (vaak reclame, journaals of losse fragmenten) staat geen productiemaatschappij genoemd. Klik een naam voor Wikipedia.');
+  setSub('studio',`${nl(sc.distinct)} maatschappijen`,sc.withFabriek,`Bij ${pct(sc.withFabriek,sc.total)} van de rapporten vermeld; bij de rest (reclame, journaals, fragmenten) niet. Klik een naam voor Wikipedia.`);
 
   // Genre — toggle oordeel / censuur (gestapelde balk)
   function genreRow(g,parts,valDisp){
@@ -533,14 +532,14 @@ function buildInzichten(){
       document.getElementById('genrechart').innerHTML=rows.map(g=>
         genreRow(g,[['goedgekeurd',g.tot-g.cut-g.ban,'var(--A)'],['geknipt',g.cut,'var(--f18)'],['verboden',g.ban,'var(--X)']],pct(g.cut+g.ban,g.tot))).join('');
       document.getElementById('genre-leg').innerHTML=`<span style="cursor:default"><i style="background:var(--A)"></i>goedgekeurd</span><span style="cursor:default"><i style="background:var(--f18)"></i>geknipt</span><span style="cursor:default"><i style="background:var(--X)"></i>verboden</span>`+tg;
-      setSub('genre','aandeel van elk genre dat geknipt of verboden werd · strengst boven (Wikidata)');
+      setSub('genre','aandeel geknipt of verboden · strengst boven',null,'Genres uit Wikidata. Toggle naar ‘oordeel’ voor de leeftijdsverdeling.');
     } else {
       const gk=[['A','Alle leeftijden','var(--A)'],['f14','14 jaar','var(--f14)'],['f18','18 jaar','var(--f18)'],['X','Verboden','var(--X)']];
       const sev=g=>(g.f14+g.f18*2+g.X*3)/(g.tot||1);
       document.getElementById('genrechart').innerHTML=[...gs].sort((a,b)=>sev(a)-sev(b)).map(g=>
         genreRow(g,gk.map(k=>[k[1],g[k[0]]||0,k[2]]),nl(g.tot))).join('');
       document.getElementById('genre-leg').innerHTML=gk.map(k=>`<span style="cursor:default"><i style="background:${k[2]}"></i>${k[1]}</span>`).join('')+tg;
-      setSub('genre','aandeel van elk oordeel per genre · van mildst (boven) naar strengst (Wikidata)');
+      setSub('genre','aandeel per oordeel · mildst boven',null,'Genres uit Wikidata. Toggle naar ‘censuur’ voor het aandeel geknipt/verboden.');
     }
     document.querySelectorAll('#genre-leg .toggle[data-tg="genre"] button').forEach(b=>b.onclick=()=>drawGenre(b.dataset.v));
     bindTips();
@@ -551,13 +550,13 @@ function buildInzichten(){
   const cs=(s.topCountries||[]).concat(['Overig']);
   const ckeys=cs.map((c,i)=>({k:c,lab:c,col:COUNTRY_PAL[i%COUNTRY_PAL.length]}));
   yearchart('originchart','origin-leg',(s.countryByYear||[]),ckeys,{occ:[1940,1945],occLabel:'bezetting',everyLabel:5,decade:true,exclude:{k:'Verenigde Staten',label:'VS'}});
-  setSub('origin','land van herkomst per eerste keuringsjaar · klik een reeks om te isoleren',s.coverage.country,'Herkomst uit Wikidata; alleen fictiefilms met bekend land.');
+  setSub('origin','land van herkomst per jaar',s.coverage.country,'Uit Wikidata; alleen fictiefilms met bekend land. Klik een reeks om te isoleren, of toggle per decennium / zonder VS.');
 
   // Acteurs — met IMDb-links
   const imdbName=id=>`https://www.imdb.com/name/${id}`;
   bars('actorchart',(s.topActors||[]).slice(0,12).map(a=>[a.n,a.films,'var(--accent)',
     `${nl(a.reach)} IMDb-stemmen bereikt · ${a.cens}× in geknipte/verboden film`,null,imdbName(a.id)]),null);
-  setSub('actors','aantal films uit dit corpus waarin de acteur voorkwam · klik voor IMDb',s.coverage.cast);
+  setSub('actors','aantal films in dit corpus',s.coverage.cast,'Aantal films waarin de acteur voorkwam. Klik een naam voor IMDb.');
 
   // In de censuur — toggle acteurs / regisseurs (combibalk geknipt vs verboden)
   const censSegs=x=>[[x.cut,'var(--f18)','geknipt'],[x.banned,'var(--X)','verboden']];
@@ -567,10 +566,10 @@ function buildInzichten(){
     document.getElementById('cp-tg').innerHTML=censLeg.map(l=>`<span style="cursor:default"><i style="background:${l[0]}"></i>${l[1]}</span>`).join('')+tg;
     if(mode==='regisseurs'){
       stackBars('cpchart',(s.censoredDirectors||[]).map(d=>[d.n,censSegs(d),nl(d.cens),`${d.pct}%`,wikiUrl(d.n)]));
-      setSub('cp','regisseurs met de meeste geknipte of verboden films · % = aandeel van hun oeuvre');
+      setSub('cp','meest gecensureerde regisseurs',null,'Gestapeld geknipt vs. verboden; % = aandeel van hun getoonde oeuvre. Klik een naam voor Wikipedia.');
     } else {
       stackBars('cpchart',(s.starsCensored||[]).map(a=>[a.n,censSegs(a),`${a.pct}%`,null,imdbName(a.id)]));
-      setSub('cp','acteurs wier getoonde oeuvre het vaakst geknipt of verboden werd · min. 12 films');
+      setSub('cp','sterren met het meest-gecensureerde oeuvre',null,'Aandeel van hun getoonde films dat geknipt of verboden werd (min. 12 films). Klik voor IMDb.');
     }
     document.querySelectorAll('#cp-tg .toggle[data-tg="cp"] button').forEach(b=>b.onclick=()=>drawCensPeople(b.dataset.v));
     bindTips();
@@ -581,7 +580,7 @@ function buildInzichten(){
   const cd=(s.censTimeline||[]).map(t=>({y:t.y,cut:t.tot?+(t.cut/t.tot*100).toFixed(1):0,banned:t.tot?+(t.banned/t.tot*100).toFixed(1):0}));
   yearchart('censchart','cens-leg',cd,[{k:'cut',lab:'geknipt',col:'var(--f18)'},{k:'banned',lab:'verboden',col:'var(--X)'}],
     {occ:[1940,1945],occLabel:'bezetting',everyLabel:5,unit:'%'});
-  setSub('cens','aandeel van de films dat per jaar geknipt of verboden werd');
+  setSub('cens','aandeel geknipt of verboden per jaar',null,'Percentage van de in dat jaar gekeurde films dat coupures kreeg (geknipt) of geheel werd verboden.');
 
 
   loadMap();
@@ -611,7 +610,7 @@ function setupMap(){
   document.getElementById('map-leg').innerHTML='<span class="sw"><i style="background:#eef1f4"></i>geen</span>'+
     MAPBINS.map((b,i)=>`<span class="sw"><i style="background:${MAPCOL[i]}"></i>${b[1]}</span>`).join('')+
     '<span style="opacity:.85">o.a. Japan, Australië en Argentinië vallen buiten beeld</span>';
-  setSub('map','geografische herkomst van de fictiefilms · donkerder = meer films · historische staten samengevoegd tot moderne landen',STATS.coverage.country);
+  setSub('map','geografische herkomst',STATS.coverage.country,'Donkerder = meer films. Historische staten samengevoegd tot moderne landen; enkele niet-Atlantische landen vallen buiten beeld.');
   fillMap();
 }
 function fillMap(){
