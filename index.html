@@ -877,7 +877,9 @@ function fcard(g){
   if(f.ci)links.push(`<a class="lg lg-cc" title="Cinema Context" href="https://www.cinemacontext.nl/id/${f.ci}" target="_blank" rel="noopener">🎬 CC</a>`);
   const poster=f.p?`<img class="poster" loading="lazy" src="https://image.tmdb.org/t/p/w154${f.p}" alt="">`:'<div class="poster-none">🎞️</div>';
   const dossIds=g.recs.filter(r=>r.id).map(r=>r.id);
-  const dossBar=dossIds.length?`<a class="dossbar" href="https://www.nationaalarchief.nl/onderzoeken/index/nt00402/${dossIds[0]}" target="_blank" rel="noopener" data-doss="${dossIds.join(',')}" title="Open het keuringsrapport bij het Nationaal Archief">📄 Dossier${dossIds.length>1?'s ('+dossIds.length+')':''}</a>`:'';
+  const dossN=dossIds.length;
+  const dossTitle=dossN<=1?'Open het keuringsrapport bij het Nationaal Archief':(dossN<=4?'Open de '+dossN+' keuringsrapporten bij het Nationaal Archief':dossN+' keuringen — opent het eerste rapport (te veel om alle tegelijk te openen)');
+  const dossBar=dossN?`<a class="dossbar" href="https://www.nationaalarchief.nl/onderzoeken/index/nt00402/${dossIds[0]}" target="_blank" rel="noopener" data-doss="${dossIds.join(',')}" title="${dossTitle}">📄 Dossier${dossN>1?'s ('+dossN+')':''}</a>`:'';
   const npages=Math.ceil(g.recs.length/KMAX);
   if(g.ci&&npages>1) window._KR[g.ci]={recs:g.recs,ft:f.t};
   const keur=keurPage(g.recs,f.t,0);
@@ -912,7 +914,7 @@ document.getElementById('cards').addEventListener('click',e=>{
     pager.querySelector('.kpg').textContent=(pg+1)+' / '+np;
     pager.querySelector('.kprev').disabled=pg===0; pager.querySelector('.knext').disabled=pg===np-1; bindTips(); return;}
   const pn=e.target.closest('.pname');if(pn){e.preventDefault();const q=pn.dataset.q;state.q=q;document.getElementById('q').value=q;applyFilters();scrollTo(0,0);return;}
-  const a=e.target.closest('a[data-doss]');if(!a)return;const ids=a.dataset.doss.split(',');if(ids.length<=1)return;e.preventDefault();ids.slice(0,8).forEach(id=>window.open('https://www.nationaalarchief.nl/onderzoeken/index/nt00402/'+id,'_blank','noopener'));});
+  const a=e.target.closest('a[data-doss]');if(!a)return;const ids=a.dataset.doss.split(',');if(ids.length<=1||ids.length>4)return;e.preventDefault();ids.forEach(id=>window.open('https://www.nationaalarchief.nl/onderzoeken/index/nt00402/'+id,'_blank','noopener'));});
 document.querySelector('.filterbar').addEventListener('change',e=>{const t=e.target;if(t.tagName!=='INPUT')return;
   if('o' in t.dataset){t.checked?state.oordeel.add(t.dataset.o):state.oordeel.delete(t.dataset.o);}
   else if('c' in t.dataset){const c=+t.dataset.c;t.checked?state.cat.add(c):state.cat.delete(c);}
