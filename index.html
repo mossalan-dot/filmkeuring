@@ -235,6 +235,12 @@
   .keurpager .knav:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
   .keurpager .kpg{font-variant-numeric:tabular-nums}
   .keur .kflag{margin-left:3px}
+  .keur.klink{text-decoration:none;color:inherit;cursor:pointer;padding:3px 6px;margin:0 -6px;border-radius:6px}
+  .keur.klink:hover{background:#eef6f8}
+  .keur.klink:hover .kdat{color:var(--accent)}
+  .keur .kgo{margin-left:auto;color:var(--accent);font-size:11px;opacity:0;flex:none;transition:opacity .12s}
+  .keur.klink:hover .kgo{opacity:1}
+  .dosshint{margin-top:auto;padding-top:9px;font-size:11.5px;color:var(--muted);text-align:center}
   .dossierbtn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;font-size:12px;padding:5px 11px;border-radius:8px;white-space:nowrap;flex:none}
   .dossierbtn:hover{background:var(--accent-dark)}
   /* choropleth-kaart */
@@ -852,14 +858,16 @@ function renderMore(){
   const b=document.getElementById('more');
   if(shown<filtered.length){b.style.display='block';b.textContent=`Toon meer (${nl(filtered.length-shown)} resterend)`;}else b.style.display='none';
 }
-const KMAX=6; window._KR={};
-function keurRowHTML(r,ft){
+const KMAX=6, DOSS_BASE='https://www.nationaalarchief.nl/onderzoeken/index/nt00402/'; window._KR={};
+function keurRowHTML(r,ft,asLink){
   const oc=OCLS[r.o]||'q', ol=OL[r.o]||'?', dat=fmtDate(r.d);
   const flags=(r.k?'<span class="kflag" title="coupures">✂</span>':'')+(r.ho?`<span class="kflag" title="herkeurd → ${OL[r.ho]||'?'}">↻</span>`:'');
   const subt=(r.t!==ft)?`<span class="kast" data-tip="titel bij deze keuring:<br><b>${esc(r.t)}</b>">*</span>`:'';
-  return `<div class="keur"><span class="fb ${oc}">${ol}</span><span class="kdat">${dat}${flags}</span>${subt}</div>`;
+  const inner=`<span class="fb ${oc}">${ol}</span><span class="kdat">${dat}${flags}</span>${subt}`;
+  if(asLink&&r.id) return `<a class="keur klink" href="${DOSS_BASE}${r.id}" target="_blank" rel="noopener" title="Open dit keuringsrapport bij het Nationaal Archief">${inner}<span class="kgo">↗</span></a>`;
+  return `<div class="keur">${inner}</div>`;
 }
-function keurPage(recs,ft,page){return recs.slice(page*KMAX,(page+1)*KMAX).map(r=>keurRowHTML(r,ft)).join('');}
+function keurPage(recs,ft,page,asLink){return recs.slice(page*KMAX,(page+1)*KMAX).map(r=>keurRowHTML(r,ft,asLink)).join('');}
 function fcard(g){
   const f=g.p, yr=(f.d||'').slice(0,4);
   const cls={0:'A',1:'f14',2:'f18',3:'X'}[g.strict]||'q';
@@ -877,12 +885,13 @@ function fcard(g){
   if(f.ci)links.push(`<a class="lg lg-cc" title="Cinema Context" href="https://www.cinemacontext.nl/id/${f.ci}" target="_blank" rel="noopener">🎬 CC</a>`);
   const poster=f.p?`<img class="poster" loading="lazy" src="https://image.tmdb.org/t/p/w154${f.p}" alt="">`:'<div class="poster-none">🎞️</div>';
   const dossIds=g.recs.filter(r=>r.id).map(r=>r.id);
-  const dossN=dossIds.length;
-  const dossTitle=dossN<=1?'Open het keuringsrapport bij het Nationaal Archief':(dossN<=4?'Open de '+dossN+' keuringsrapporten bij het Nationaal Archief':dossN+' keuringen — opent het eerste rapport (te veel om alle tegelijk te openen)');
-  const dossBar=dossN?`<a class="dossbar" href="https://www.nationaalarchief.nl/onderzoeken/index/nt00402/${dossIds[0]}" target="_blank" rel="noopener" data-doss="${dossIds.join(',')}" title="${dossTitle}">📄 Dossier${dossN>1?'s ('+dossN+')':''}</a>`:'';
+  const multi=g.recs.length>1;
+  const dossBar=dossIds.length?(multi
+    ? `<div class="dosshint">📄 Klik een keuring voor het rapport bij het NA</div>`
+    : `<a class="dossbar" href="${DOSS_BASE}${dossIds[0]}" target="_blank" rel="noopener" title="Open het keuringsrapport bij het Nationaal Archief">📄 Dossier</a>`):'';
   const npages=Math.ceil(g.recs.length/KMAX);
   if(g.ci&&npages>1) window._KR[g.ci]={recs:g.recs,ft:f.t};
-  const keur=keurPage(g.recs,f.t,0);
+  const keur=keurPage(g.recs,f.t,0,multi);
   const pager=(g.ci&&npages>1)?`<div class="keurpager" data-ci="${g.ci}"><button class="knav kprev" disabled aria-label="vorige">‹</button><span class="kpg">1 / ${npages}</span><button class="knav knext" aria-label="volgende">›</button></div>`:'';
   const keurHead=g.recs.length>1?`<div class="keurhead">${g.recs.length} keuringen</div>`:'<div class="keurhead">Keuring</div>';
   const anyAlt=g.recs.some(r=>r.t!==f.t);
@@ -910,11 +919,11 @@ document.getElementById('cards').addEventListener('click',e=>{
     const pager=nav.closest('.keurpager'), data=window._KR[pager.dataset.ci]; if(!data)return;
     const list=pager.previousElementSibling, np=Math.ceil(data.recs.length/KMAX);
     let pg=+list.dataset.page; pg=nav.classList.contains('knext')?Math.min(pg+1,np-1):Math.max(pg-1,0);
-    list.dataset.page=pg; list.innerHTML=keurPage(data.recs,data.ft,pg);
+    list.dataset.page=pg; list.innerHTML=keurPage(data.recs,data.ft,pg,true);
     pager.querySelector('.kpg').textContent=(pg+1)+' / '+np;
     pager.querySelector('.kprev').disabled=pg===0; pager.querySelector('.knext').disabled=pg===np-1; bindTips(); return;}
   const pn=e.target.closest('.pname');if(pn){e.preventDefault();const q=pn.dataset.q;state.q=q;document.getElementById('q').value=q;applyFilters();scrollTo(0,0);return;}
-  const a=e.target.closest('a[data-doss]');if(!a)return;const ids=a.dataset.doss.split(',');if(ids.length<=1||ids.length>4)return;e.preventDefault();ids.forEach(id=>window.open('https://www.nationaalarchief.nl/onderzoeken/index/nt00402/'+id,'_blank','noopener'));});
+  });
 document.querySelector('.filterbar').addEventListener('change',e=>{const t=e.target;if(t.tagName!=='INPUT')return;
   if('o' in t.dataset){t.checked?state.oordeel.add(t.dataset.o):state.oordeel.delete(t.dataset.o);}
   else if('c' in t.dataset){const c=+t.dataset.c;t.checked?state.cat.add(c):state.cat.delete(c);}
