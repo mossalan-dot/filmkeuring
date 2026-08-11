@@ -94,6 +94,9 @@
   /* dossier-tab */
   .deye{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:700;margin:0 0 4px}
   .dtitle{font-size:21px;margin:0 0 16px;letter-spacing:-.01em}
+  .dintro{display:flex;gap:18px;align-items:flex-start}
+  .dposter{width:132px;flex:none;border-radius:8px;box-shadow:0 3px 16px rgba(0,0,0,.28)}
+  @media(max-width:520px){.dintro{flex-direction:column}.dposter{width:120px}}
   .dtl{list-style:none;margin:6px 0 0;padding:0}
   .dtl li{position:relative;padding:0 0 14px 26px;border-left:2px solid var(--line);margin-left:6px;font-size:14px}
   .dtl li:last-child{border-left-color:transparent;padding-bottom:0}
@@ -496,8 +499,9 @@
   <div class="tabpane" id="pane-dossier">
     <p class="deye">Voorbeelddossier · film nr. Z 1849</p>
     <h2 class="dtitle">Een dossier van dichtbij: <i>The Curse of Frankenstein</i></h2>
-    <div class="card">
-      <p class="intro" style="margin:0">In 1957 bracht de Britse studio Hammer <i>The Curse of Frankenstein</i> uit, hun eerste horror in kleur en het begin van een beroemde reeks. In Nederland werd de film eerst <b>helemaal verboden</b>. Distributeur Warner Bros ging in beroep, en bij de herkeuring werd het verbod teruggedraaid: de film mocht alsnog, voor <b>18 jaar en ouder</b>. Achter dat ene keuringsrapport zit dit dossier, een botsing tussen censuur en filmindustrie, op papier.</p>
+    <div class="card dintro">
+      <img class="dposter" src="https://image.tmdb.org/t/p/w342/r9PDkqKhzdo54aqnOL88wUJY49B.jpg" alt="Filmposter The Curse of Frankenstein" loading="lazy">
+      <p class="intro" style="margin:0">In 1957 bracht de Britse studio Hammer <i>The Curse of Frankenstein</i> uit, hun eerste horrorfilm in kleur en het begin van een beroemde reeks. In Nederland werd de film eerst <b>helemaal verboden</b>. Distributeur Warner Bros ging in beroep, en bij de herkeuring werd het verbod teruggedraaid: de film mocht alsnog, voor <b>18 jaar en ouder</b>. Achter dat ene keuringsrapport zit dit dossier, een botsing tussen censuur en filmindustrie, op papier.</p>
     </div>
 
     <div class="card">
@@ -519,7 +523,7 @@
         <div>
           <div class="ddt">1 · Het aanvraagformulier</div>
           <div class="ddd">Warner Bros aan de Centrale Commissie · 13 september 1957</div>
-          <p>Op dit blauwe formulier vult de distributeur alle gegevens in. Zo lezen we de credits: regisseur <b>Terence Fisher</b>, met <b>Peter Cushing</b>, <b>Christopher Lee</b>, Hazel Court en Robert Urquhart; filmfabriek Hammer (Michael Carreras), uitgebracht door Warner Bros; 2.357 meter, 35 mm kleur.</p>
+          <p>Op dit blauwe formulier vult de distributeur alle gegevens in. Zo lezen we de credits: regisseur <b><a href="https://nl.wikipedia.org/wiki/Terence_Fisher" target="_blank" rel="noopener">Terence Fisher</a></b>, met <b><a href="https://nl.wikipedia.org/wiki/Peter_Cushing" target="_blank" rel="noopener">Peter Cushing</a></b>, <b><a href="https://nl.wikipedia.org/wiki/Christopher_Lee" target="_blank" rel="noopener">Christopher Lee</a></b>, <a href="https://en.wikipedia.org/wiki/Hazel_Court" target="_blank" rel="noopener">Hazel Court</a> en <a href="https://en.wikipedia.org/wiki/Robert_Urquhart_(actor)" target="_blank" rel="noopener">Robert Urquhart</a>; filmfabriek Hammer (Michael Carreras), uitgebracht door Warner Bros; 2.357 meter, 35 mm kleur.</p>
         </div>
         <figure><button type="button" class="dscan" data-cap="Aanvraagformulier" data-imgs="dossier/fk-aanvraag.jpg"><img src="dossier/fk-aanvraag.jpg" alt="Aanvraagformulier" loading="lazy"></button><figcaption>Aanvraagformulier met de credits</figcaption></figure>
       </div>
@@ -575,7 +579,7 @@
 
     <div class="card">
       <h3 style="font-size:16px">Zelf een dossier inzien</h3>
-      <p style="margin:0">Deze scans komen uit het originele keuringsdossier bij het Nationaal Archief (film nr. <b>Z 1849</b>, dossier 1128, index <a href="https://www.nationaalarchief.nl/onderzoeken/zoekhulpen/filmkeuringsrapporten-1928-1960" target="_blank" rel="noopener">NT00402</a>, toegang 2.04.60). Achter elk keuringsrapport in de <a href="#" onclick="openTab('zoeken');return false">zoektab</a> zit zo'n dossier.</p>
+      <p style="margin:0">Deze scans komen uit het originele keuringsdossier bij het Nationaal Archief: film nr. <b>Z 1849</b>, dossier 1128, index NT00402 (toegang 2.04.60). De <a href="https://www.nationaalarchief.nl/onderzoeken/index/nt00402/0d65c318-7cc1-102d-a57f-005056a23d00" target="_blank" rel="noopener">recordpagina bij het Nationaal Archief</a> toont het volledige dossier met het inventarisnummer. Achter elk keuringsrapport in de <a href="#" onclick="openTab('zoeken');return false">zoektab</a> zit zo'n dossier.</p>
     </div>
   </div>
 </main>
