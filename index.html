@@ -110,6 +110,18 @@
   .ddoc img{width:100%;display:block}
   .ddoc figcaption{font-size:11px;color:var(--muted);margin-top:5px;text-align:center}
   .dq{margin:8px 0;padding:8px 14px;border-left:3px solid var(--accent);background:#f0fafc;border-radius:0 8px 8px 0;font-size:13.5px;color:#334155;font-style:italic}
+  .dscan{cursor:zoom-in;position:relative;padding:0;border:1px solid var(--line);border-radius:9px;overflow:hidden;box-shadow:0 1px 3px #0000000f,0 8px 24px #00000010;background:#fff;display:block;width:100%}
+  .dscan:hover{border-color:#cbd5e1}
+  .pgbadge{position:absolute;right:6px;bottom:6px;background:rgba(31,41,55,.85);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;pointer-events:none}
+  .lb{position:fixed;inset:0;z-index:99999;background:rgba(17,24,39,.9);display:none;align-items:center;justify-content:center;padding:30px}
+  .lb.on{display:flex}
+  .lb img{max-width:min(900px,94vw);max-height:88vh;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.55);background:#fff}
+  .lb button{position:absolute;border:none;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;line-height:1;border-radius:50%}
+  .lb button:hover{background:rgba(255,255,255,.32)}
+  .lb-close{top:16px;right:20px;width:42px;height:42px;font-size:24px}
+  .lb-prev,.lb-next{top:50%;transform:translateY(-50%);width:50px;height:50px;font-size:30px}
+  .lb-prev{left:14px}.lb-next{right:14px}
+  .lb-cap{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#e5e7eb;font-size:13px;background:none;width:auto}
   @media(max-width:640px){.ddoc{grid-template-columns:1fr}}
   .card.w12{grid-column:span 12}.card.w8{grid-column:span 8}.card.w6{grid-column:span 6}.card.w4{grid-column:span 4}
   @media(max-width:900px){.card.w8,.card.w6,.card.w4{grid-column:span 12}}
@@ -295,8 +307,8 @@
 <div class="tabbar">
   <button id="tabbtn-zoeken" data-pane="zoeken">🔎 Zoeken</button>
   <button id="tabbtn-inzichten" class="on" data-pane="inzichten">📊 Inzichten</button>
+  <button id="tabbtn-dossier" data-pane="dossier">📄 Voorbeeld</button>
   <button id="tabbtn-over" data-pane="over">ℹ️ Over</button>
-  <button id="tabbtn-dossier" data-pane="dossier">📄 Dossier</button>
 </div>
 
 <main>
@@ -480,17 +492,18 @@
     </div>
   </div>
 
-  <!-- ============ DOSSIER ============ -->
+<!-- ============ DOSSIER ============ -->
   <div class="tabpane" id="pane-dossier">
     <p class="deye">Voorbeelddossier · film nr. Z 1849</p>
     <h2 class="dtitle">Een dossier van dichtbij: <i>The Curse of Frankenstein</i></h2>
     <div class="card">
-      <p class="intro" style="margin:0">In 1957 bracht de Britse studio Hammer <i>The Curse of Frankenstein</i> uit — hun eerste horror in kleur en het begin van een beroemde reeks. In Nederland werd de film eerst <b>helemaal verboden</b>. Distributeur Warner Bros ging in beroep, en bij de herkeuring werd het verbod teruggedraaid: de film mocht alsnog, voor <b>18 jaar en ouder</b>. Achter dat ene keuringsrapport op deze site zit dit dossier — een botsing tussen censuur en filmindustrie, op papier.</p>
+      <p class="intro" style="margin:0">In 1957 bracht de Britse studio Hammer <i>The Curse of Frankenstein</i> uit, hun eerste horror in kleur en het begin van een beroemde reeks. In Nederland werd de film eerst <b>helemaal verboden</b>. Distributeur Warner Bros ging in beroep, en bij de herkeuring werd het verbod teruggedraaid: de film mocht alsnog, voor <b>18 jaar en ouder</b>. Achter dat ene keuringsrapport zit dit dossier, een botsing tussen censuur en filmindustrie, op papier.</p>
     </div>
 
     <div class="card">
       <p class="deye">Het verloop</p>
       <ul class="dtl">
+        <li><span class="d">13 september 1957</span><div>Warner Bros dient de film aan bij de Centrale Commissie.</div></li>
         <li><span class="d">1 oktober 1957</span><div>Eerste keuring: de film wordt <b>verboden</b> voor openbare vertoning.</div></li>
         <li><span class="d">23 oktober 1957</span><div>Warner Bros dient een gemotiveerd bezwaar in en vraagt herkeuring aan.</div></li>
         <li><span class="d">1 november 1957</span><div>De herkeuringscommissie <b>vernietigt het verbod</b> en laat de film toe voor 18 jaar en ouder.</div></li>
@@ -500,44 +513,63 @@
     <div class="card">
       <p class="deye">De documenten</p>
       <h3 style="margin:0 0 4px;font-size:16px">Hoe zo'n keuringsdossier is opgebouwd</h3>
-      <p style="font-size:12.5px;color:var(--muted);margin:0 0 4px">Vier stukken uit dossier Z 1849, elk met een eigen rol. Klik een scan om hem op ware grootte te bekijken.</p>
+      <p style="font-size:12.5px;color:var(--muted);margin:0 0 4px">Zes stukken uit dossier Z 1849, elk met een eigen rol. Klik een scan om hem groter te bekijken en door de pagina's te bladeren.</p>
 
       <div class="ddoc">
         <div>
-          <div class="ddt">1 · Het keuringsformulier</div>
-          <div class="ddd">Centrale Commissie voor de Filmkeuring · 1957</div>
-          <p>Op dit formulier legt de commissie haar oordeel vast. Bij de eerste keuring: <b>niet toegelaten voor openbare vertoning</b>. Na het beroep, bij de herkeuring op 1 november 1957, wordt de film alsnog toegelaten voor <b>18 jaar en ouder</b>. De film — 2.272 meter lang, in 7 bedrijven — is aangeboden door Warner Bros te Amsterdam.</p>
+          <div class="ddt">1 · Het aanvraagformulier</div>
+          <div class="ddd">Warner Bros aan de Centrale Commissie · 13 september 1957</div>
+          <p>Op dit blauwe formulier vult de distributeur alle gegevens in. Zo lezen we de credits: regisseur <b>Terence Fisher</b>, met <b>Peter Cushing</b>, <b>Christopher Lee</b>, Hazel Court en Robert Urquhart; filmfabriek Hammer (Michael Carreras), uitgebracht door Warner Bros; 2.357 meter, 35 mm kleur.</p>
         </div>
-        <figure><a class="dscan" href="dossier/fk-formulier.jpg" target="_blank" rel="noopener"><img src="dossier/fk-formulier.jpg" alt="Keuringsformulier Z 1849" loading="lazy"></a><figcaption>Uitslag der (her)keuring</figcaption></figure>
+        <figure><button type="button" class="dscan" data-cap="Aanvraagformulier" data-imgs="dossier/fk-aanvraag.jpg"><img src="dossier/fk-aanvraag.jpg" alt="Aanvraagformulier" loading="lazy"></button><figcaption>Aanvraagformulier met de credits</figcaption></figure>
       </div>
 
       <div class="ddoc">
         <div>
-          <div class="ddt">2 · De motivering van het verbod</div>
+          <div class="ddt">2 · De titellijst: het script in het Nederlands</div>
+          <div class="ddd">Bij de aanvraag gevoegd</div>
+          <p>De volledige Nederlandse dialoog werd als <b>titellijst</b> meegeleverd, genummerd per shot. Dit is wat de commissie las om over de inhoud te oordelen. Ook de <b>trailer</b> zat erbij, met de wervende slotregels.</p>
+          <blockquote class="dq">"DE SCHRIK VAN FRANKENSTEIN LOOPT VRIJ ROND! … DE VLOEK VAN FRANKENSTEIN, BINNENKORT IN DIT THEATER."</blockquote>
+        </div>
+        <figure><button type="button" class="dscan" data-cap="Titellijst / het script" data-imgs="dossier/fk-titel-1.jpg,dossier/fk-titel-2.jpg,dossier/fk-trailer.jpg"><img src="dossier/fk-titel-1.jpg" alt="Titellijst met de Nederlandse dialoog" loading="lazy"><span class="pgbadge">3 pagina's</span></button><figcaption>Titellijst, klik om te bladeren</figcaption></figure>
+      </div>
+
+      <div class="ddoc">
+        <div>
+          <div class="ddt">3 · Het keuringsformulier</div>
+          <div class="ddd">Centrale Commissie voor de Filmkeuring · 1957</div>
+          <p>Op dit formulier legt de commissie haar oordeel vast. Bij de eerste keuring: <b>niet toegelaten voor openbare vertoning</b>. Na het beroep, bij de herkeuring op 1 november 1957, wordt de film alsnog toegelaten voor <b>18 jaar en ouder</b>.</p>
+        </div>
+        <figure><button type="button" class="dscan" data-cap="Uitslag der (her)keuring" data-imgs="dossier/fk-formulier.jpg"><img src="dossier/fk-formulier.jpg" alt="Keuringsformulier Z 1849" loading="lazy"></button><figcaption>Uitslag der (her)keuring</figcaption></figure>
+      </div>
+
+      <div class="ddoc">
+        <div>
+          <div class="ddt">4 · De motivering van het verbod</div>
           <div class="ddd">1 oktober 1957</div>
           <p>Waarom de film eerst werd verboden, staat er in ondubbelzinnige bewoordingen. De taal van de censor is op zichzelf al een tijdsbeeld:</p>
           <blockquote class="dq">"Deze film is niet toegelaten, omdat de film een perfide aanslag is op de eerbied verschuldigd aan het menselijk lichaam … omdat de afgrijselijke slachtpartijen van menselijke lichamen even zovele weerzinwekkende lijkschennissen betekenen … omdat de film een regelrecht gevaar voor de geestelijke volksgezondheid is … in strijd zijn met de goede zeden."</blockquote>
         </div>
-        <figure><a class="dscan" href="dossier/fk-verbod.jpg" target="_blank" rel="noopener"><img src="dossier/fk-verbod.jpg" alt="Motivering van het verbod" loading="lazy"></a><figcaption>Motivering van het verbod</figcaption></figure>
+        <figure><button type="button" class="dscan" data-cap="Motivering van het verbod" data-imgs="dossier/fk-verbod.jpg"><img src="dossier/fk-verbod.jpg" alt="Motivering van het verbod" loading="lazy"></button><figcaption>Motivering van het verbod</figcaption></figure>
       </div>
 
       <div class="ddoc">
         <div>
-          <div class="ddt">3 · Warner Bros gaat in beroep</div>
+          <div class="ddt">5 · Warner Bros gaat in beroep</div>
           <div class="ddd">Warner Bros First National Pictures · 23 oktober 1957</div>
           <p>De distributeur is het oneens en dient een uitvoerig bezwaar in. Het argument: de film hoort tot een genre dat helemaal niet serieus genomen wil worden.</p>
           <blockquote class="dq">"Het 'Grand Guignol' genre, waartoe dit verhaal behoort, wil niets manifesteren of betogen … Het wil alleen de toeschouwer doen griezelen … het gegeven [is] dermate absurd, dat geen zinnig toeschouwer aan enige werkelijkheidsweergave zal denken."</blockquote>
         </div>
-        <figure><a class="dscan" href="dossier/fk-warner-beroep.jpg" target="_blank" rel="noopener"><img src="dossier/fk-warner-beroep.jpg" alt="Beroepsbrief van Warner Bros" loading="lazy"></a><figcaption>Beroepsbrief van Warner Bros</figcaption></figure>
+        <figure><button type="button" class="dscan" data-cap="Beroepsbrief van Warner Bros" data-imgs="dossier/fk-warner-beroep.jpg,dossier/fk-warner-beroep-2.jpg"><img src="dossier/fk-warner-beroep.jpg" alt="Beroepsbrief van Warner Bros" loading="lazy"><span class="pgbadge">2 pagina's</span></button><figcaption>Beroepsbrief, klik om te bladeren</figcaption></figure>
       </div>
 
       <div class="ddoc">
         <div>
-          <div class="ddt">4 · Het verbod wordt vernietigd</div>
+          <div class="ddt">6 · Het verbod wordt vernietigd</div>
           <div class="ddd">Herkeuringscommissie · 1 november 1957</div>
           <p>De herkeuringscommissie geeft Warner Bros gelijk. In een handgeschreven uitspraak wordt het verbod ongedaan gemaakt: "Vernietigt de uitspraak in eerste aanleg … laat de film toe voor openbare vertoning aan personen van den leeftijd van 18 jaar en ouder." <i>The Curse of Frankenstein</i> mag alsnog draaien.</p>
         </div>
-        <figure><a class="dscan" href="dossier/fk-herkeuring.jpg" target="_blank" rel="noopener"><img src="dossier/fk-herkeuring.jpg" alt="Uitspraak herkeuring" loading="lazy"></a><figcaption>Uitspraak van de herkeuring</figcaption></figure>
+        <figure><button type="button" class="dscan" data-cap="Uitspraak van de herkeuring" data-imgs="dossier/fk-herkeuring.jpg"><img src="dossier/fk-herkeuring.jpg" alt="Uitspraak herkeuring" loading="lazy"></button><figcaption>Uitspraak van de herkeuring</figcaption></figure>
       </div>
     </div>
 
@@ -1022,5 +1054,30 @@ document.getElementById('more').onclick=renderMore;
 </script>
 <script>window.goatcounter={path:function(p){return location.host+p}}</script>
 <script data-goatcounter="https://stats.alanmoss.nl/count" async src="https://stats.alanmoss.nl/count.js"></script>
+<div class="lb" id="lb" aria-hidden="true">
+  <button class="lb-close" title="Sluiten (Esc)">&times;</button>
+  <button class="lb-prev" title="Vorige">&lsaquo;</button>
+  <img id="lb-img" alt="">
+  <button class="lb-next" title="Volgende">&rsaquo;</button>
+  <div class="lb-cap"></div>
+</div>
+<script>
+(function(){
+  var lb=document.getElementById('lb'), img=document.getElementById('lb-img'), cap=lb.querySelector('.lb-cap');
+  var imgs=[], i=0, capText='';
+  function show(){ img.src=imgs[i]; cap.textContent=(imgs.length>1?('Pagina '+(i+1)+' van '+imgs.length+' \u00b7 '):'')+capText;
+    var m=imgs.length>1; lb.querySelector('.lb-prev').style.display=m?'':'none'; lb.querySelector('.lb-next').style.display=m?'':'none'; }
+  function open(el){ imgs=(el.getAttribute('data-imgs')||'').split(',').filter(Boolean); if(!imgs.length)return;
+    i=0; capText=el.getAttribute('data-cap')||''; show(); lb.classList.add('on'); document.body.style.overflow='hidden'; }
+  function close(){ lb.classList.remove('on'); document.body.style.overflow=''; img.src=''; }
+  document.addEventListener('click',function(e){ var el=e.target.closest && e.target.closest('.dscan'); if(el){ open(el); } });
+  lb.querySelector('.lb-close').onclick=close;
+  lb.querySelector('.lb-prev').onclick=function(){ i=(i-1+imgs.length)%imgs.length; show(); };
+  lb.querySelector('.lb-next').onclick=function(){ i=(i+1)%imgs.length; show(); };
+  lb.addEventListener('click',function(e){ if(e.target===lb) close(); });
+  document.addEventListener('keydown',function(e){ if(!lb.classList.contains('on'))return;
+    if(e.key==='Escape')close(); else if(e.key==='ArrowLeft')lb.querySelector('.lb-prev').click(); else if(e.key==='ArrowRight')lb.querySelector('.lb-next').click(); });
+})();
+</script>
 </body>
 </html>
