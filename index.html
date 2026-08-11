@@ -886,6 +886,7 @@ function openTab(name){
   scrollTo(0,0);
 }
 document.querySelectorAll('.tabbar button').forEach(b=>b.onclick=()=>openTab(b.dataset.pane));
+{ const h=location.hash.replace('#',''); if(['zoeken','inzichten','over','dossier'].includes(h)) openTab(h); }
 
 /* ---------- zoeken ---------- */
 const state={q:'',yearFrom:null,yearTo:null,oordeel:new Set(['A','14','18','X']),cat:new Set([0,1]),cut:false,re:false,poster:false,sort:'d'};
