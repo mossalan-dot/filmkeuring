@@ -91,6 +91,26 @@
   /* kaartgrid */
   .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px 18px;overflow:hidden}
+  /* dossier-tab */
+  .deye{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:700;margin:0 0 4px}
+  .dtitle{font-size:21px;margin:0 0 16px;letter-spacing:-.01em}
+  .dtl{list-style:none;margin:6px 0 0;padding:0}
+  .dtl li{position:relative;padding:0 0 14px 26px;border-left:2px solid var(--line);margin-left:6px;font-size:14px}
+  .dtl li:last-child{border-left-color:transparent;padding-bottom:0}
+  .dtl li::before{content:"";position:absolute;left:-7px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--card)}
+  .dtl .d{display:block;font-size:12px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+  .ddoc{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;padding:20px 0;border-top:1px solid var(--line)}
+  .ddoc:first-of-type{border-top:none;padding-top:6px}
+  .ddt{font-weight:700;font-size:15px;margin:0 0 2px}
+  .ddd{color:var(--muted);font-size:12px;margin:0 0 8px}
+  .ddoc p{font-size:14px;margin:0 0 8px}
+  .ddoc figure{margin:0}
+  .dscan{display:block;border:1px solid var(--line);border-radius:9px;overflow:hidden;box-shadow:0 1px 3px #0000000f,0 8px 24px #00000010;background:#fff}
+  .dscan:hover{border-color:#cbd5e1}
+  .ddoc img{width:100%;display:block}
+  .ddoc figcaption{font-size:11px;color:var(--muted);margin-top:5px;text-align:center}
+  .dq{margin:8px 0;padding:8px 14px;border-left:3px solid var(--accent);background:#f0fafc;border-radius:0 8px 8px 0;font-size:13.5px;color:#334155;font-style:italic}
+  @media(max-width:640px){.ddoc{grid-template-columns:1fr}}
   .card.w12{grid-column:span 12}.card.w8{grid-column:span 8}.card.w6{grid-column:span 6}.card.w4{grid-column:span 4}
   @media(max-width:900px){.card.w8,.card.w6,.card.w4{grid-column:span 12}}
   .card h2{margin:0;font-size:15px}
@@ -276,6 +296,7 @@
   <button id="tabbtn-zoeken" data-pane="zoeken">🔎 Zoeken</button>
   <button id="tabbtn-inzichten" class="on" data-pane="inzichten">📊 Inzichten</button>
   <button id="tabbtn-over" data-pane="over">ℹ️ Over</button>
+  <button id="tabbtn-dossier" data-pane="dossier">📄 Dossier</button>
 </div>
 
 <main>
@@ -456,6 +477,73 @@
         <p>Samenstelling en visualisatie: <a href="https://alanmoss.nl" target="_blank" rel="noopener">Alan Moss</a>. Onderdeel van de <a href="https://archief.alanmoss.nl" target="_blank" rel="noopener">archiefprojecten</a>. De brondata van het Nationaal Archief is CC0. Broncode: <a href="https://github.com/mossalan-dot/filmkeuring" target="_blank" rel="noopener">github.com/mossalan-dot/filmkeuring</a>.</p>
         <p style="font-size:12px;color:var(--muted)">Deze site gebruikt de TMDb-API maar is niet door TMDb goedgekeurd of gecertificeerd. Filmgegevens © de respectieve bronnen.</p>
       </div>
+    </div>
+  </div>
+
+  <!-- ============ DOSSIER ============ -->
+  <div class="tabpane" id="pane-dossier">
+    <p class="deye">Voorbeelddossier · film nr. Z 1849</p>
+    <h2 class="dtitle">Een dossier van dichtbij: <i>The Curse of Frankenstein</i></h2>
+    <div class="card">
+      <p class="intro" style="margin:0">In 1957 bracht de Britse studio Hammer <i>The Curse of Frankenstein</i> uit — hun eerste horror in kleur en het begin van een beroemde reeks. In Nederland werd de film eerst <b>helemaal verboden</b>. Distributeur Warner Bros ging in beroep, en bij de herkeuring werd het verbod teruggedraaid: de film mocht alsnog, voor <b>18 jaar en ouder</b>. Achter dat ene keuringsrapport op deze site zit dit dossier — een botsing tussen censuur en filmindustrie, op papier.</p>
+    </div>
+
+    <div class="card">
+      <p class="deye">Het verloop</p>
+      <ul class="dtl">
+        <li><span class="d">1 oktober 1957</span><div>Eerste keuring: de film wordt <b>verboden</b> voor openbare vertoning.</div></li>
+        <li><span class="d">23 oktober 1957</span><div>Warner Bros dient een gemotiveerd bezwaar in en vraagt herkeuring aan.</div></li>
+        <li><span class="d">1 november 1957</span><div>De herkeuringscommissie <b>vernietigt het verbod</b> en laat de film toe voor 18 jaar en ouder.</div></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <p class="deye">De documenten</p>
+      <h3 style="margin:0 0 4px;font-size:16px">Hoe zo'n keuringsdossier is opgebouwd</h3>
+      <p style="font-size:12.5px;color:var(--muted);margin:0 0 4px">Vier stukken uit dossier Z 1849, elk met een eigen rol. Klik een scan om hem op ware grootte te bekijken.</p>
+
+      <div class="ddoc">
+        <div>
+          <div class="ddt">1 · Het keuringsformulier</div>
+          <div class="ddd">Centrale Commissie voor de Filmkeuring · 1957</div>
+          <p>Op dit formulier legt de commissie haar oordeel vast. Bij de eerste keuring: <b>niet toegelaten voor openbare vertoning</b>. Na het beroep, bij de herkeuring op 1 november 1957, wordt de film alsnog toegelaten voor <b>18 jaar en ouder</b>. De film — 2.272 meter lang, in 7 bedrijven — is aangeboden door Warner Bros te Amsterdam.</p>
+        </div>
+        <figure><a class="dscan" href="fk-formulier.jpg" target="_blank" rel="noopener"><img src="fk-formulier.jpg" alt="Keuringsformulier Z 1849" loading="lazy"></a><figcaption>Uitslag der (her)keuring</figcaption></figure>
+      </div>
+
+      <div class="ddoc">
+        <div>
+          <div class="ddt">2 · De motivering van het verbod</div>
+          <div class="ddd">1 oktober 1957</div>
+          <p>Waarom de film eerst werd verboden, staat er in ondubbelzinnige bewoordingen. De taal van de censor is op zichzelf al een tijdsbeeld:</p>
+          <blockquote class="dq">"Deze film is niet toegelaten, omdat de film een perfide aanslag is op de eerbied verschuldigd aan het menselijk lichaam … omdat de afgrijselijke slachtpartijen van menselijke lichamen even zovele weerzinwekkende lijkschennissen betekenen … omdat de film een regelrecht gevaar voor de geestelijke volksgezondheid is … in strijd zijn met de goede zeden."</blockquote>
+        </div>
+        <figure><a class="dscan" href="fk-verbod.jpg" target="_blank" rel="noopener"><img src="fk-verbod.jpg" alt="Motivering van het verbod" loading="lazy"></a><figcaption>Motivering van het verbod</figcaption></figure>
+      </div>
+
+      <div class="ddoc">
+        <div>
+          <div class="ddt">3 · Warner Bros gaat in beroep</div>
+          <div class="ddd">Warner Bros First National Pictures · 23 oktober 1957</div>
+          <p>De distributeur is het oneens en dient een uitvoerig bezwaar in. Het argument: de film hoort tot een genre dat helemaal niet serieus genomen wil worden.</p>
+          <blockquote class="dq">"Het 'Grand Guignol' genre, waartoe dit verhaal behoort, wil niets manifesteren of betogen … Het wil alleen de toeschouwer doen griezelen … het gegeven [is] dermate absurd, dat geen zinnig toeschouwer aan enige werkelijkheidsweergave zal denken."</blockquote>
+        </div>
+        <figure><a class="dscan" href="fk-warner-beroep.jpg" target="_blank" rel="noopener"><img src="fk-warner-beroep.jpg" alt="Beroepsbrief van Warner Bros" loading="lazy"></a><figcaption>Beroepsbrief van Warner Bros</figcaption></figure>
+      </div>
+
+      <div class="ddoc">
+        <div>
+          <div class="ddt">4 · Het verbod wordt vernietigd</div>
+          <div class="ddd">Herkeuringscommissie · 1 november 1957</div>
+          <p>De herkeuringscommissie geeft Warner Bros gelijk. In een handgeschreven uitspraak wordt het verbod ongedaan gemaakt: "Vernietigt de uitspraak in eerste aanleg … laat de film toe voor openbare vertoning aan personen van den leeftijd van 18 jaar en ouder." <i>The Curse of Frankenstein</i> mag alsnog draaien.</p>
+        </div>
+        <figure><a class="dscan" href="fk-herkeuring.jpg" target="_blank" rel="noopener"><img src="fk-herkeuring.jpg" alt="Uitspraak herkeuring" loading="lazy"></a><figcaption>Uitspraak van de herkeuring</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:16px">Zelf een dossier inzien</h3>
+      <p style="margin:0">Deze scans komen uit het originele keuringsdossier bij het Nationaal Archief (film nr. <b>Z 1849</b>, dossier 1128, index <a href="https://www.nationaalarchief.nl/onderzoeken/zoekhulpen/filmkeuringsrapporten-1928-1960" target="_blank" rel="noopener">NT00402</a>, toegang 2.04.60). Achter elk keuringsrapport in de <a href="#" onclick="openTab('zoeken');return false">zoektab</a> zit zo'n dossier.</p>
     </div>
   </div>
 </main>
