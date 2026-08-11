@@ -103,7 +103,7 @@
   .dtl li::before{content:"";position:absolute;left:-7px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--card)}
   .dtl .d{display:block;font-size:12px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
   .ddoc{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;padding:20px 0;border-top:1px solid var(--line)}
-  .ddoc:first-of-type{border-top:none;padding-top:6px}
+  .ddoc:first-of-type{border-top:1px solid var(--line);margin-top:14px}
   .ddt{font-weight:700;font-size:15px;margin:0 0 2px}
   .ddd{color:var(--muted);font-size:12px;margin:0 0 8px}
   .ddoc p{font-size:14px;margin:0 0 8px}
@@ -497,7 +497,7 @@
 
 <!-- ============ DOSSIER ============ -->
   <div class="tabpane" id="pane-dossier">
-    <p class="deye">Voorbeelddossier · film nr. Z 1849</p>
+    <p class="deye">Voorbeelddossier · dossier Z 1849</p>
     <h2 class="dtitle">Een dossier van dichtbij: <i>The Curse of Frankenstein</i></h2>
     <div class="card dintro">
       <img class="dposter" src="https://image.tmdb.org/t/p/w342/r9PDkqKhzdo54aqnOL88wUJY49B.jpg" alt="Filmposter The Curse of Frankenstein" loading="lazy">
@@ -507,7 +507,7 @@
     <div class="card">
       <p class="deye">Het verloop</p>
       <ul class="dtl">
-        <li><span class="d">13 september 1957</span><div>Warner Bros dient de film aan bij de Centrale Commissie.</div></li>
+        <li><span class="d">13 september 1957</span><div>Warner Bros dient de film in bij de Centrale Commissie.</div></li>
         <li><span class="d">1 oktober 1957</span><div>Eerste keuring: de film wordt <b>verboden</b> voor openbare vertoning.</div></li>
         <li><span class="d">23 oktober 1957</span><div>Warner Bros dient een gemotiveerd bezwaar in en vraagt herkeuring aan.</div></li>
         <li><span class="d">1 november 1957</span><div>De herkeuringscommissie <b>vernietigt het verbod</b> en laat de film toe voor 18 jaar en ouder.</div></li>
@@ -579,7 +579,7 @@
 
     <div class="card">
       <h3 style="font-size:16px">Zelf een dossier inzien</h3>
-      <p style="margin:0">Deze scans komen uit het originele keuringsdossier bij het Nationaal Archief: film nr. <b>Z 1849</b>, dossier 1128, index NT00402 (toegang 2.04.60). De <a href="https://www.nationaalarchief.nl/onderzoeken/index/nt00402/0d65c318-7cc1-102d-a57f-005056a23d00" target="_blank" rel="noopener">recordpagina bij het Nationaal Archief</a> toont het volledige dossier met het inventarisnummer. Achter elk keuringsrapport in de <a href="#" onclick="openTab('zoeken');return false">zoektab</a> zit zo'n dossier.</p>
+      <p style="margin:0">Deze scans komen uit het originele keuringsdossier bij het Nationaal Archief: dossier <b>Z 1849</b>, inventarisnummer 1849, index NT00402 (toegang 2.04.60). De <a href="https://www.nationaalarchief.nl/onderzoeken/index/nt00402/0d65c318-7cc1-102d-a57f-005056a23d00" target="_blank" rel="noopener">recordpagina bij het Nationaal Archief</a> toont het volledige dossier. Achter elk keuringsrapport in de <a href="#" onclick="openTab('zoeken');return false">zoektab</a> zit zo'n dossier.</p>
     </div>
   </div>
 </main>
