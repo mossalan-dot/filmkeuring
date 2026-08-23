@@ -28,6 +28,13 @@ LAND = {
 TAG_RE = re.compile(r"\s*\(([A-Z]{1,2})\)\s*$")
 METER_RE = re.compile(r"([\d.]+)")
 
+import unicodedata
+_NORM_RE = re.compile(r"[^a-z0-9]")
+def _norm(s):
+    """Titelvergelijking zonder accenten, hoofdletters of leestekens."""
+    s = unicodedata.normalize("NFD", s or "").encode("ascii", "ignore").decode()
+    return _NORM_RE.sub("", s.lower())
+
 QUOTES_RE = re.compile(r'"{2,}')
 def clean(s):
     """Archiefdata gebruikt verdubbelde aanhalingstekens rond (deel)titels."""
@@ -193,7 +200,8 @@ tm = _load(D + "tmdb.json")           # {tt:{p,r,n,y,tm}}
 ir = _load(D + "imdb_ratings.json")   # {tt:{ar,nv}}
 wd = _load(D + "wikidata.json")       # {tt:{c,g,d,w}}
 ac = _load(D + "actors_cast.json")    # {tt:[{id,n}]}
-n_tt = n_poster = n_rating = 0
+tl = _load(D + "imdb_titles.json")    # {tt:{pt:primaryTitle, ot:originalTitle}}
+n_tt = n_poster = n_rating = n_ititle = 0
 if cc:
     ci2tt = {k: v["tt"] for k, v in cc.items() if v.get("tt")}
     for rec in films:
@@ -219,14 +227,36 @@ if cc:
         cst = ac.get(tt) if ac else None
         if cst:
             rec["cast"] = [a["n"] for a in cst[:3]]
-    print(f"verrijkt: {n_tt} records met tt-id, {n_poster} poster, {n_rating} IMDb-rating")
+        # bekende titel (IMDb primaryTitle) als hoofdtitel; archieftitel + originele
+        # titel worden 'ook bekend als' (blijven doorzoekbaar)
+        td = tl.get(tt) if tl else None
+        if td and td.get("pt"):
+            pt, ot = td["pt"], td.get("ot")
+            aliases = []
+            if _norm(pt) != _norm(rec["t"]):
+                rec["it"] = pt
+                aliases.append(rec["t"])          # archivarische NL-titel
+                n_ititle += 1
+            if ot and _norm(ot) != _norm(pt) and _norm(ot) != _norm(rec["t"]):
+                aliases.append(ot)                # originele-taal titel
+            it_n = _norm(rec.get("it") or "")
+            merged = []
+            for x in aliases + (rec.get("alt") or []):
+                nx = _norm(x)
+                if x and nx != it_n and all(nx != _norm(y) for y in merged):
+                    merged.append(x)
+            if merged:
+                rec["alt"] = merged
+            elif "alt" in rec:
+                del rec["alt"]
+    print(f"verrijkt: {n_tt} records met tt-id, {n_poster} poster, {n_rating} IMDb-rating, {n_ititle} bekende titel")
 
 # --- Verboden-galerij: compacte lijst van alle 'niet toegelaten'-films ---
 banned_list = []
 for rec in films:
     if rec.get("o") != "X":
         continue
-    b = {"t": rec["t"], "y": (rec.get("d") or "")[:4]}
+    b = {"t": rec.get("it") or rec["t"], "y": (rec.get("d") or "")[:4]}
     for k in ("f", "ci", "id", "tt", "p", "r"):
         if rec.get(k):
             b[k] = rec[k]

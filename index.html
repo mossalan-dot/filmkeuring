@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>De Filmkeuring 1928–1960 — Centrale Commissie voor de Filmkeuring</title>
+<title>De Filmkeuring 1928–1960 · Centrale Commissie voor de Filmkeuring</title>
 <meta name="description" content="Alle 48.499 keuringsrapporten van de Nederlandse filmkeuring 1928–1960, in cijfers en doorzoekbaar: verboden films, coupures, leeftijdsoordelen, verrijkt met IMDb, posters en Wikidata.">
 <style>
   :root{
@@ -56,6 +56,9 @@
   .srcgrid a{display:block;background:var(--card2,#eef3f4);border:1px solid var(--line);border-radius:10px;padding:11px 14px;text-decoration:none;color:var(--ink);font-weight:600;font-size:13.5px}
   .srcgrid a:hover{border-color:var(--accent)}
   .srcgrid a span{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+  .downloads{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .downloads a{font-size:14px;text-decoration:none;padding:9px 15px;border:1px solid var(--line);border-radius:9px;color:var(--accent);background:#fff;font-weight:600}
+  .downloads a:hover{border-color:var(--accent);background:#f0fafc}
   /* Bijzondere vondsten — Carnegie-stijl */
   .finds{position:relative;background:var(--cream);border:1px solid var(--cream-line);border-radius:14px;padding:16px 62px;margin-bottom:26px}
   .finds .flabel{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);font-weight:700;margin-bottom:11px}
@@ -214,7 +217,7 @@
   .chip.ct[aria-pressed="true"]{background:var(--accent)}
   .filterbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;align-items:center}
   .fdrop{position:relative}
-  .fdrop-btn{font:inherit;font-size:13.5px;font-weight:600;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+  .fdrop-btn{font:inherit;font-size:14px;font-weight:500;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
   .fdrop-btn:hover{border-color:var(--accent)}
   .fdrop.open .fdrop-btn{border-color:var(--accent);color:var(--accent)}
   .fdrop .fcnt{background:var(--accent);color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:1px 7px;display:none}
@@ -270,12 +273,12 @@
   .keurpager .knav:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
   .keurpager .kpg{font-variant-numeric:tabular-nums}
   .keur .kflag{margin-left:3px}
-  .keur.klink{text-decoration:none;color:inherit;cursor:pointer;padding:3px 6px;margin:0 -6px;border-radius:6px}
-  .keur.klink:hover{background:#eef6f8}
-  .keur.klink:hover .kdat{color:var(--accent)}
-  .keur .kgo{margin-left:auto;color:var(--accent);font-size:11px;opacity:0;flex:none;transition:opacity .12s}
+  .keur.klink{text-decoration:none;color:inherit;cursor:pointer;padding:4px 8px;margin:0 -2px;border-radius:7px;background:#f3fafb;border:1px solid #dfedf0;transition:background .12s,border-color .12s}
+  .keur.klink:hover{background:#e4f4f7;border-color:var(--accent)}
+  .keur.klink .kdat{color:var(--accent);font-weight:600}
+  .keur .kgo{margin-left:auto;color:var(--accent);font-size:11px;opacity:.55;flex:none;transition:opacity .12s}
   .keur.klink:hover .kgo{opacity:1}
-  .dosshint{margin-top:auto;background:var(--accent);color:#fff;text-align:center;padding:9px;border-radius:8px;font-weight:700;font-size:12px}
+  .dosshint{margin-top:auto;background:#f4f6f7;color:var(--muted);text-align:center;padding:8px;border-radius:8px;font-weight:500;font-size:11.5px}
   .dossierbtn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;font-size:12px;padding:5px 11px;border-radius:8px;white-space:nowrap;flex:none}
   .dossierbtn:hover{background:var(--accent-dark)}
   /* choropleth-kaart */
@@ -308,18 +311,18 @@
 </div></header>
 
 <div class="tabbar">
-  <button id="tabbtn-zoeken" data-pane="zoeken">🔎 Zoeken</button>
-  <button id="tabbtn-inzichten" class="on" data-pane="inzichten">📊 Inzichten</button>
-  <button id="tabbtn-dossier" data-pane="dossier">📄 Voorbeeld</button>
-  <button id="tabbtn-over" data-pane="over">ℹ️ Over</button>
+  <button id="tabbtn-zoeken" class="on" data-pane="zoeken"><span>🔎</span>Zoeken</button>
+  <button id="tabbtn-inzichten" data-pane="inzichten"><span>📊</span>Inzichten</button>
+  <button id="tabbtn-dossier" data-pane="dossier"><span>📄</span>Voorbeeld</button>
+  <button id="tabbtn-over" data-pane="over"><span>ℹ️</span>Over</button>
 </div>
 
 <main>
   <!-- ============ INZICHTEN ============ -->
-  <div class="tabpane on" id="pane-inzichten">
+  <div class="tabpane" id="pane-inzichten">
     <p class="intro">Van 1928 tot 1960 moest elke film die in Nederland vertoond werd langs de <b>Centrale
       Commissie voor de Filmkeuring</b>. Films konden worden toegelaten voor alle leeftijden, vanaf 14 of 18 jaar,
-      of geheel worden verboden. Deze 48.499 keuringen komen uit de index van het Nationaal Archief —
+      of geheel worden verboden. Deze 48.499 keuringen komen uit de index van het Nationaal Archief,
       verrijkt met IMDb, posters en Wikidata, met per film een link naar het originele dossier bij het NA.</p>
 
     <div class="kpis" id="kpis"></div>
@@ -387,7 +390,7 @@
   </div>
 
   <!-- ============ ZOEKEN ============ -->
-  <div class="tabpane" id="pane-zoeken">
+  <div class="tabpane on" id="pane-zoeken">
     <p class="intro">Doorzoek alle 48.499 keuringsrapporten op titel, studio of aanvrager. Filter op
       leeftijdsoordeel, geknipte films, herkeuringen en fictie.</p>
     <div class="controls">
@@ -439,7 +442,7 @@
   </div>
   <!-- ============ OVER ============ -->
   <div class="tabpane" id="pane-over">
-    <p class="intro">Hoe deze bijna vijftigduizend keuringsrapporten van papier naar een doorzoekbare, verrijkte database gingen — en wat de cijfers wel en niet zeggen.</p>
+    <p class="intro">Hoe deze bijna vijftigduizend keuringsrapporten van papier naar een doorzoekbare, verrijkte database gingen, en wat de cijfers wel en niet zeggen.</p>
     <div class="grid">
       <div class="card w12 prose">
         <h3>De Centrale Commissie voor de Filmkeuring</h3>
@@ -451,27 +454,27 @@
         <h3>Van keuringsrapport naar dataset</h3>
         <p>De ruwe index is een tabel met titel, aanvrager, productiemaatschappij, lengte, datum, oordeel en coupures. Twee dingen zijn opgeschoond voor de leesbaarheid:</p>
         <ul>
-          <li><b>Titels</b> — de archivarische schrijfwijze zet het lidwoord achteraan (“Bruiden van Dracula, De”). Dat is teruggedraaid naar “De Bruiden van Dracula”. Een puntkomma scheidt taalvarianten; die staan nu als <i>“ook bekend als”</i> en zijn doorzoekbaar.</li>
-          <li><b>Coupures</b> — het rapport noteert meestal alleen de geknipte lengte in meters, zelden de reden. “Geknipt” betekent hier dus: er is iets verwijderd, niet wat of waarom.</li>
+          <li><b>Titels</b>: de archivarische schrijfwijze zet het lidwoord achteraan (“Bruiden van Dracula, De”). Dat is teruggedraaid naar “De Bruiden van Dracula”. Een puntkomma scheidt taalvarianten; die staan nu als <i>“ook bekend als”</i> en zijn doorzoekbaar.</li>
+          <li><b>Coupures</b>: het rapport noteert meestal alleen de geknipte lengte in meters, zelden de reden. “Geknipt” betekent hier dus: er is iets verwijderd, niet wat of waarom.</li>
         </ul>
       </div>
 
       <div class="card w12 prose">
-        <h3>De verrijking — via Cinema Context naar IMDb en meer</h3>
+        <h3>De verrijking: via Cinema Context naar IMDb en meer</h3>
         <p>De index zelf bevat geen posters, beoordelingen of cast. Die zijn toegevoegd via één sleutel: elke film in NT00402 verwijst naar <b>Cinema Context</b>, de wetenschappelijke database van de Nederlandse filmcultuur. En de Cinema Context-pagina van een échte speelfilm bevat het <b>IMDb-nummer</b> (het <code>tt…</code>-id). Dat nummer is de brug naar de rest van de open-databronnen:</p>
         <ol class="steps">
           <li>Van de ~20.900 unieke fictie-pagina's op Cinema Context leverde <b>65%</b> een IMDb-id op (obscure reclame- en journaalfilms hebben er geen).</li>
           <li>Met dat id haalden we <b>posters</b> op bij TMDb (16.066 films), de <b>IMDb-gebruikersscore</b> uit IMDb's eigen open datasets (15.226), en <b>land, genre, regisseur en een Wikipedia-link</b> uit Wikidata (12.905 landen, 12.842 regisseurs).</li>
           <li>De <b>cast</b> komt uit IMDb's <code>title.principals</code>-dataset, gekoppeld op datzelfde id: 13.401 films, 17.924 acteurs.</li>
         </ol>
-        <p>Historische staten zijn daarbij samengevoegd tot moderne landen (de zeven Duitslanden — Keizerrijk, Weimar, nazi-Duitsland, DDR, BRD… — worden samen “Duitsland”). Budget- en opbrengstcijfers bestaan wel in Wikidata, maar zijn voor deze periode te schaars om te tonen.</p>
+        <p>Historische staten zijn daarbij samengevoegd tot moderne landen; de zeven Duitslanden (Keizerrijk, Weimar, nazi-Duitsland, DDR, BRD en meer) worden samen “Duitsland”. Budget- en opbrengstcijfers bestaan wel in Wikidata, maar zijn voor deze periode te schaars om te tonen.</p>
       </div>
 
       <div class="card w12 prose">
         <h3>Wat de cijfers wel en niet zeggen</h3>
         <ul>
           <li>De verrijking dekt vrijwel alleen <b>fictiefilms</b> met een IMDb-vermelding. Journaals, reclame en veel Nederlandse producties blijven zonder poster of score.</li>
-          <li>De <b>IMDb-score</b> is een moderne publiekswaardering, geen oordeel uit de jaren '30 — leuk als context, niet als historische bron.</li>
+          <li>De <b>IMDb-score</b> is een moderne publiekswaardering, geen oordeel uit de jaren '30, leuk als context, niet als historische bron.</li>
           <li>Een film kon <b>meerdere keren</b> gekeurd worden (heruitgave, gewijzigde versie, trailer); die keuringen zijn hier tot één filmkaart gebundeld, elk met een eigen dossierlink.</li>
         </ul>
       </div>
@@ -484,6 +487,17 @@
           <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDb<span>Posters</span></a>
           <a href="https://developer.imdb.com/non-commercial-datasets/" target="_blank" rel="noopener">IMDb datasets<span>Scores, stemmen & cast</span></a>
           <a href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata<span>Land, genre, regisseur, Wikipedia</span></a>
+        </div>
+      </div>
+
+      <div class="card w12 prose">
+        <h3>Gegevens &amp; broncode</h3>
+        <p>Alle data en de volledige broncode van de site en de verrijkingspijplijn zijn vrij te gebruiken. De brondata van het Nationaal Archief is CC0.</p>
+        <div class="downloads">
+          <a href="NT00402_FILMKEURINGSRAPPORTEN.csv" download>⬇️ Bronindex (CSV)</a>
+          <a href="films.json" download>⬇️ Verrijkte films (JSON)</a>
+          <a href="stats.json" download>⬇️ Cijfers (JSON)</a>
+          <a href="https://github.com/mossalan-dot/filmkeuring" target="_blank" rel="noopener">💻 Broncode (GitHub)</a>
         </div>
       </div>
 
@@ -579,7 +593,8 @@
 
     <div class="card">
       <h3 style="font-size:16px">Zelf een dossier inzien</h3>
-      <p style="margin:0">Deze scans komen uit het originele keuringsdossier bij het Nationaal Archief: dossier <b>Z 1849</b>, inventarisnummer 1849, index NT00402 (toegang 2.04.60). De <a href="https://www.nationaalarchief.nl/onderzoeken/index/nt00402/0d65c318-7cc1-102d-a57f-005056a23d00" target="_blank" rel="noopener">recordpagina bij het Nationaal Archief</a> toont het volledige dossier. Achter elk keuringsrapport in de <a href="#" onclick="openTab('zoeken');return false">zoektab</a> zit zo'n dossier.</p>
+      <p style="margin:0 0 10px">Deze scans komen uit het originele keuringsdossier bij het Nationaal Archief: dossier <b>Z 1849</b>, inventarisnummer 1849, index NT00402 (toegang 2.04.60). De <a href="https://www.nationaalarchief.nl/onderzoeken/index/nt00402/0d65c318-7cc1-102d-a57f-005056a23d00" target="_blank" rel="noopener">recordpagina bij het Nationaal Archief</a> toont het volledige dossier.</p>
+      <p style="margin:0">Zelf zoeken kan op twee manieren. Het snelst gaat het via de <a href="#" onclick="openTab('zoeken');return false">zoektab</a> hierboven: zoek op titel en klik bij de gevonden film op de keuringsdatum, dan opent het bijbehorende dossier rechtstreeks bij het NA. Wilt u liever zelf in het archief graven, dan legt de <a href="https://www.nationaalarchief.nl/onderzoeken/zoekhulpen/filmkeuringsrapporten-1928-1960" target="_blank" rel="noopener">zoekhulp Filmkeuringsrapporten 1928–1960</a> stap voor stap uit hoe u op titel, jaar of dossiernummer door index NT00402 bladert en de scans opvraagt.</p>
     </div>
   </div>
 </main>
@@ -621,7 +636,7 @@ function setSub(id,text,n,note){
   const s=document.getElementById('s-'+id); if(s) s.textContent=text;
   if(n!=null||note){const h=document.getElementById('h-'+id);
     if(h&&!h.querySelector('.qmark')){const q=document.createElement('span');q.className='qmark';q.textContent='?';
-      q.setAttribute('data-tip',(note?esc(note):'')+(n!=null?((note?' — ':'')+`n = ${nl(n)} ingevulde records`):''));h.appendChild(document.createTextNode(' '));h.appendChild(q);}}
+      q.setAttribute('data-tip',(note?esc(note):'')+(n!=null?((note?' · ':'')+`n = ${nl(n)} ingevulde records`):''));h.appendChild(document.createTextNode(' '));h.appendChild(q);}}
 }
 function kpi(items){document.getElementById('kpis').innerHTML=items.map(([v,l,s,tip,cls])=>
   `<div class="kpi ${cls||''}">${tip?`<span class="q" data-tip="${esc(tip)}">?</span>`:''}<div class="v">${v}</div><div class="l">${l}</div>${s?`<div class="s">${s}</div>`:''}</div>`).join('');}
@@ -721,8 +736,8 @@ function buildInzichten(){
   const s=STATS;
   kpi([
     [nl(s.total),"keuringsrapporten","1928 – 1960"],
-    [nl(s.banned),"films verboden",`${pct(s.banned,s.total)} van het totaal`,"Oordeel “niet toegelaten” — geheel geweigerd voor vertoning.",'red'],
-    [nl(s.coupures),"films met coupures",`${pct(s.coupures,s.total)} — gedeeltelijk geknipt`,"De commissie eiste dat stukken film verwijderd werden. Het rapport noteert meestal de geknipte lengte in meters, niet de reden."],
+    [nl(s.banned),"films verboden",`${pct(s.banned,s.total)} van het totaal`,"Oordeel “niet toegelaten”: geheel geweigerd voor vertoning.",'red'],
+    [nl(s.coupures),"films met coupures",`${pct(s.coupures,s.total)}, gedeeltelijk geknipt`,"De commissie eiste dat stukken film verwijderd werden. Het rapport noteert meestal de geknipte lengte in meters, niet de reden."],
     [nl(s.herkeuringen),"films herkeurd"],
   ]);
 
@@ -860,24 +875,24 @@ const FINDS=[
   meta:"4 van de 796 verboden films",
   links:[["Maltezer valk",CCID('F021121')],["Rope",CCID('F015725')],["Andalusische Hond",CCID('F034706')],["Het Zoete leven",CCID('F018631')]]},
  {emoji:"⚖️",tag:"Streng ≠ slecht",title:"De schaar volgde de zeden, niet de kwaliteit",
-  body:"Verboden films kregen op IMDb gemiddeld géén lagere waardering dan toegelaten films, en geknipte films (6,16) scoren vrijwel gelijk aan ongeknipte (6,23). De commissie oordeelde over zeden en moraal — niet over filmkwaliteit.",
+  body:"Verboden films kregen op IMDb gemiddeld géén lagere waardering dan toegelaten films, en geknipte films (6,16) scoren vrijwel gelijk aan ongeknipte (6,23). De commissie oordeelde over zeden en moraal, niet over filmkwaliteit.",
   meta:"gemiddelde IMDb-score per oordeel: 6,1–6,3"},
  {emoji:"↩️",tag:"Tweede kans",title:"Van verboden naar toegelaten",
-  body:"Een verbod was niet altijd het eindpunt. 183 eerst geweigerde films kregen bij een herkeuring alsnog groen licht — soms jaren later, soms na het knippen van enkele scènes.",
+  body:"Een verbod was niet altijd het eindpunt. 183 eerst geweigerde films kregen bij een herkeuring alsnog groen licht, soms jaren later, soms na het knippen van enkele scènes.",
   meta:"183 films herzien",zoek:{oordeel:['X'],re:true},zoekLabel:"Bekijk de herziene films →"},
  {emoji:"🇩🇪",tag:"De Duitse greep",title:"Wenen en Berlijn in de Nederlandse zaal",
   body:"Geen ster kwam in dit corpus vaker voor dan de Weense acteur Paul Hörbiger, in 136 films. Met Theo Lingen, Hans Moser en Willy Fritsch weerspiegelt de top de dominantie van de Duitstalige film, die in de bezettingsjaren piekte.",
   meta:"Paul Hörbiger · 136 films",
   links:[["Paul Hörbiger op IMDb","https://www.imdb.com/name/nm0405977"]]},
  {emoji:"✂️",tag:"De schaar",title:"De meest gecensureerde regisseur",
-  body:"Van Hollywood-vakman Michael Curtiz — later beroemd om <i>Casablanca</i> — werden achttien films geknipt of geheel verboden: elf coupures en zeven volledige verboden, bijna een kwart van zijn hier vertoonde werk.",
+  body:"Van Hollywood-vakman Michael Curtiz, later beroemd om <i>Casablanca</i>, werden achttien films geknipt of geheel verboden: elf coupures en zeven volledige verboden, bijna een kwart van zijn hier vertoonde werk.",
   meta:"Michael Curtiz · 18 films"},
  {emoji:"🎞️",tag:"Kolossen",title:"Ruim zes kilometer film",
   body:"De langste film in de index is <i>Gone with the Wind</i> (1950): 6.179 meter celluloid, goed voor bijna vier uur. Alleen het afdraaien vulde al een complete bioscoopavond.",
   meta:"Gejaagd door de wind · 6.179 m",
   links:[["Gejaagd door de wind",CCID('F019441')]]},
  {emoji:"📰",tag:"Aan de lopende band",title:"Elke week opnieuw langs de keuring",
-  body:"Naast de speelfilms passeerde een eindeloze stroom bioscoopjournaals. Het <i>Paramount Journaal</i> en <i>Polygoon's wereldnieuws</i> werden honderden keren afzonderlijk gekeurd — de industriële routine achter de filmkeuring.",
+  body:"Naast de speelfilms passeerde een eindeloze stroom bioscoopjournaals. Het <i>Paramount Journaal</i> en <i>Polygoon's wereldnieuws</i> werden honderden keren afzonderlijk gekeurd: de industriële routine achter de filmkeuring.",
   meta:"Paramount Journaal · 734 keuringen",zoek:{q:"journaal"},zoekLabel:"Doorzoek de journaals →"},
 ];
 function _findZoek(cfg){
@@ -922,7 +937,7 @@ function openTab(name){
   scrollTo(0,0);
 }
 document.querySelectorAll('.tabbar button').forEach(b=>b.onclick=()=>openTab(b.dataset.pane));
-{ const h=location.hash.replace('#',''); if(['zoeken','inzichten','over','dossier'].includes(h)) openTab(h); }
+{ const h=location.hash.replace('#',''); openTab(['zoeken','inzichten','over','dossier'].includes(h)?h:'zoeken'); }
 
 /* ---------- zoeken ---------- */
 const state={q:'',yearFrom:null,yearTo:null,oordeel:new Set(['A','14','18','X']),cat:new Set([0,1]),cut:false,re:false,poster:false,sort:'d'};
@@ -941,7 +956,7 @@ function setupYear(){
 }
 function ensureFilms(cb){ if(FILMS){cb();return;}
   document.getElementById('count').textContent='Films laden…';
-  fetch('films.json?v=5').then(r=>r.json()).then(d=>{FILMS=d.films;cb();}); }
+  fetch('films.json?v=6').then(r=>r.json()).then(d=>{FILMS=d.films;cb();}); }
 function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
 const ORDN={A:0,'14':1,'18':2,X:3};
 function buildGroups(){
@@ -968,11 +983,11 @@ function applyFilters(){ ensureFilms(()=>{
   const q=norm(state.q);
   filtered=GROUPS.filter(g=>{
     if(!g.recs.some(recMatch))return false;
-    if(q){const hay=norm(g.p.t)+' '+g.recs.map(r=>norm(r.t)).join(' ')+' '+norm((g.p.alt||[]).join(' '))+' '+norm(g.p.a)+' '+norm(g.p.f)+' '+norm((g.p.cast||[]).join(' '))+' '+norm((g.p.di||[]).join(' ')); if(!hay.includes(q))return false;}
+    if(q){const hay=norm(g.p.it||'')+' '+norm(g.p.t)+' '+g.recs.map(r=>norm(r.t)).join(' ')+' '+g.recs.map(r=>norm((r.alt||[]).join(' '))).join(' ')+' '+norm(g.p.a)+' '+norm(g.p.f)+' '+norm((g.p.cast||[]).join(' '))+' '+norm((g.p.di||[]).join(' ')); if(!hay.includes(q))return false;}
     return true;
   });
   const cmp={d:(a,b)=>b.last.localeCompare(a.last),da:(a,b)=>(a.recs[0].d||'').localeCompare(b.recs[0].d||''),
-    t:(a,b)=>a.p.t.localeCompare(b.p.t,'nl'),m:(a,b)=>(b.p.m||0)-(a.p.m||0),r:(a,b)=>(b.p.ir||0)-(a.p.ir||0)}[state.sort];
+    t:(a,b)=>(a.p.it||a.p.t).localeCompare(b.p.it||b.p.t,'nl'),m:(a,b)=>(b.p.m||0)-(a.p.m||0),r:(a,b)=>(b.p.ir||0)-(a.p.ir||0)}[state.sort];
   filtered.sort(cmp); shown=0; document.getElementById('cards').innerHTML='';
   document.getElementById('count').innerHTML=`<b>${nl(filtered.length)}</b> film${filtered.length===1?'':'s'} gevonden`;
   renderMore();
@@ -1012,7 +1027,7 @@ function fcard(g){
   const dossIds=g.recs.filter(r=>r.id).map(r=>r.id);
   const multi=g.recs.length>1;
   const dossBar=dossIds.length?(multi
-    ? `<div class="dosshint">📄 Klik op een keuringsdatum voor het dossier bij het NA</div>`
+    ? `<div class="dosshint">📄 Klik op een keuringsdatum hierboven om dat dossier bij het NA te openen</div>`
     : `<a class="dossbar" href="${DOSS_BASE}${dossIds[0]}" target="_blank" rel="noopener" title="Open het keuringsrapport bij het Nationaal Archief">📄 Dossier</a>`):'';
   const npages=Math.ceil(g.recs.length/KMAX);
   if(g.ci&&npages>1) window._KR[g.ci]={recs:g.recs,ft:f.t};
@@ -1021,7 +1036,7 @@ function fcard(g){
   const keurHead=g.recs.length>1?`<div class="keurhead">${g.recs.length} keuringen</div>`:'<div class="keurhead">Keuring</div>';
   const anyAlt=g.recs.some(r=>r.t!==f.t);
   return `<div class="fcard o-${cls} ${g.strict===3?'banned':''}"><div class="accent"></div><div class="frow"><div class="fleft">${poster}</div><div class="body">`+
-    `<h3>${esc(f.t)||'‹zonder titel›'}</h3>`+
+    `<h3>${esc(f.it||f.t)||'‹zonder titel›'}</h3>`+
     (f.alt&&f.alt.length?`<div class="m alt">ook bekend als: ${esc(f.alt.join(' · '))}</div>`:'')+
     `<div class="m">${yr||'?'}${f.m?` · ${nl(f.m)} m`:''}${meta?` · ${esc(meta)}`:''}</div>`+
     (credit.length?`<div class="m credit">${credit.join(' · ')}</div>`:'')+
